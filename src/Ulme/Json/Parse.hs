@@ -56,10 +56,10 @@ whitespace :: Parser ( List String )
 whitespace =
     Parse.zeroOrMore
         ( Parse.oneOf
-            [ Parse.string "\x0020"
-            , Parse.string "\x000D"
-            , Parse.string "\x000A"
-            , Parse.string "\x0009"
+            [ Parse.string "\x0020" -- space
+            , Parse.string "\x000D" -- CR
+            , Parse.string "\x000A" -- LF
+            , Parse.string "\x0009" -- tab
             ]
         )
 
