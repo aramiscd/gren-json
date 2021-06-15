@@ -45,9 +45,8 @@ where
 
 import Ulme
 
-import qualified Ulme.String as String
-
 import Ulme.Json ( Json ( Jatom , Jarray , Jobject ) )
+import Ulme.String qualified as String
 
 
 print :: Json -> String

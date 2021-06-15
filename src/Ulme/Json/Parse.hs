@@ -40,10 +40,10 @@ where
 
 import Ulme
 
-import qualified Ulme.Char      as Char
-import qualified Ulme.List      as List
-import qualified Ulme.Parse     as Parse
-import qualified Ulme.String    as String
+import Ulme.Char    qualified as Char
+import Ulme.List    qualified as List
+import Ulme.Parse   qualified as Parse
+import Ulme.String  qualified as String
 
 import Ulme.Json    ( Json ( Jatom , Jarray , Jobject ) )
 import Ulme.Parse   ( Parser )
@@ -232,12 +232,12 @@ char :: Parser ( List String )
 -}
 char input =
     case input of
-    "" -> Err [ ( 0 , "Expecting more input" ) ]
+    "" -> Err [ ( ( 0 , 0 ) , "Expecting more input" ) ]
     ( head : tail ) ->
         let c = Char.toCode head in
         if c == 34 || c == 92 || c < 32 || c > 1114111
-        then Err [ ( 0 , "Expecting a valid character" ) ]
-        else Ok ( 1 , [ String.fromChar head ] , tail )
+        then Err [ ( ( 0 , 0 ) , "Expecting a valid character" ) ]
+        else Ok ( ( 0 , 1 ) , [ String.fromChar head ] , tail )
 
 
 character :: Parser ( List String )
