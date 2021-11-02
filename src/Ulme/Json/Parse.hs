@@ -1,5 +1,3 @@
-module Ulme.Json.Parse
-
 {-
     A JSON-parsing module.
 
@@ -9,11 +7,10 @@ module Ulme.Json.Parse
     I think, it is best to read this module from top
     to bottom.  Simple parsers are introduced first.
 
-
     ----
 
     Copyright 2019-2020, Aramis Concepcion Duran
-    
+
     This file is part of ulme-json.
 
     Ulme-json is free software: you can redistribute it
@@ -33,45 +30,53 @@ module Ulme.Json.Parse
     <https://www.gnu.org/licenses/>.
 -}
 
-( json
-)
-where
-
+module Ulme.Json.Parse (json) where
 
 import Ulme
 
-import Ulme.Char    qualified as Char
-import Ulme.List    qualified as List
-import Ulme.Parse   qualified as Parse
-import Ulme.String  qualified as String
+import Data.Monoid (mempty)
+import Ulme.Char qualified as Char
+import Ulme.Json (Json (JsonArray, JsonAtom, JsonObject))
+import Ulme.List qualified as List
+import Ulme.Parse (Parsed (Parsed), Parser)
+import Ulme.Parse qualified as Parse
+import Ulme.String qualified as String
 
-import Ulme.Json    ( Json ( Jatom , Jarray , Jobject ) )
-import Ulme.Parse   ( Parser )
+
+skip :: Monoid b => Parser a -> Parser b
+skip parser =
+    Parse.map (always mempty) parser
 
 
-whitespace :: Parser ( List String )
+list :: Parser a -> Parser (List a)
+list parser =
+    Parse.map List.singleton parser
+
+
+whitespace :: Monoid a => Parser a
 {-
     Parse whitespace (greedy).
 -}
 whitespace =
-    Parse.zeroOrMore
-        ( Parse.oneOf
-            [ Parse.string "\x0020" -- space
-            , Parse.string "\x000D" -- CR
-            , Parse.string "\x000A" -- LF
-            , Parse.string "\x0009" -- tab
-            ]
+    skip
+        ( Parse.zeroOrMore
+            ( Parse.oneOf
+                [ Parse.string "\x0020" -- space
+                , Parse.string "\x000D" -- carriage return
+                , Parse.string "\x000A" -- line feed
+                , Parse.string "\x0009" -- tab
+                ]
+            )
         )
 
 
 -- Integers ---------------------------------------------------------
 
-
-onenine :: Parser ( List String )
+oneNine :: Parser String
 {-
     Parse a non-zero decimal digit.
 -}
-onenine =
+oneNine =
     Parse.oneOf
         [ Parse.string "1"
         , Parse.string "2"
@@ -85,18 +90,18 @@ onenine =
         ]
 
 
-digit :: Parser ( List String )
+digit :: Parser String
 {-
     Parse a decimal digit.
 -}
 digit =
     Parse.oneOf
         [ Parse.string "0"
-        , onenine
-        ] 
+        , oneNine
+        ]
 
 
-digits :: Parser ( List String )
+digits :: Parser String
 {-
     Parse as many decimal digits as possible but at
     least one.
@@ -105,26 +110,24 @@ digits =
     Parse.oneOrMore digit
 
 
-integer :: Parser ( List String )
+integer :: Parser String
 {-
     Parse an integer.
-
     Only decimal notation, no leading zeros, with or
     without a leading minus.
 -}
 integer =
     Parse.oneOf
-        [ Parse.sequence [ onenine , digits ]
+        [ Parse.sequence [oneNine, digits]
         , digit
-        , Parse.sequence [ Parse.string "-" , onenine , digits ]
-        , Parse.sequence [ Parse.string "-" , digit ]
+        , Parse.sequence [Parse.string "-", oneNine, digits]
+        , Parse.sequence [Parse.string "-", digit]
         ]
 
 
 -- Floating-point numbers -------------------------------------------
 
-
-fraction :: Parser ( List String )
+fraction :: Parser String
 {-
     Parse the fractional part of a floating-point number.
 -}
@@ -135,10 +138,9 @@ fraction =
         ]
 
 
-sign :: Parser ( List String )
+sign :: Parser String
 {-
     Parse the sign of a scientific exponential suffix.
-
     This is NOT the optional sign in front of a JSON
     number.
 -}
@@ -151,23 +153,22 @@ sign =
         )
 
 
-exponent :: Parser ( List String )
+exponent :: Parser String
 {-
     Parse the scientific exponential suffix of a number
     (if any).
 -}
 exponent =
     Parse.sequence
-        [ Parse.oneOf [ Parse.string "E" , Parse.string "e" ]
+        [ Parse.oneOf [Parse.string "E", Parse.string "e"]
         , sign
         , digits
         ]
 
 
-number :: Parser ( List String )
+number :: Parser String
 {-
     Parse a JSON number.
-
     JSON numbers are either integer or floating-point,
     with or without a scientific exponential suffix.
     Only decimal notation is valid: no hex, no octal.
@@ -178,13 +179,11 @@ number =
         , Parse.optional fraction
         , Parse.optional exponent
         ]
-    |> Parse.withError "Expecting a number"
 
 
 -- Strings ----------------------------------------------------------
 
-
-hex :: Parser ( List String )
+hex :: Parser String
 {-
     Parse a hexadecimal digit.
 -}
@@ -208,7 +207,7 @@ hex =
         ]
 
 
-escape :: Parser ( List String )
+escape :: Parser String
 {-
     Parse an escape character.
 -}
@@ -222,36 +221,36 @@ escape =
         , Parse.string "n"
         , Parse.string "r"
         , Parse.string "t"
-        , Parse.sequence [ Parse.string "u" , hex , hex , hex , hex ]
+        , Parse.sequence [Parse.string "u", hex, hex, hex, hex]
         ]
 
 
-char :: Parser ( List String )
+char :: Parser String
 {-
     Parse an unescaped character.
 -}
 char input =
-    case input of
-    "" -> Err [ ( ( 0 , 0 ) , "Expecting more input" ) ]
-    ( head : tail ) ->
-        let c = Char.toCode head in
-        if c == 34 || c == 92 || c < 32 || c > 1114111
-        then Err [ ( ( 0 , 0 ) , "Expecting a valid character" ) ]
-        else Ok ( ( 0 , 1 ) , [ String.fromChar head ] , tail )
+    case List.head input of
+        Nothing -> Parse.fail input
+        Just head -> do
+            let c = Char.toCode head
+            if c < 32 || c == 34 || c == 92 || c > 1114111
+                then Parse.fail input
+                else (Parse.string (String.fromChar head)) input
 
 
-character :: Parser ( List String )
+character :: Parser String
 {-
     Parse a character.
 -}
 character =
     Parse.oneOf
         [ char
-        , Parse.sequence [ Parse.string "\\" , escape ]
+        , Parse.sequence [Parse.string "\\", escape]
         ]
 
 
-characters :: Parser ( List String )
+characters :: Parser String
 {-
     Parse any number of characters.
 -}
@@ -259,7 +258,7 @@ characters =
     Parse.zeroOrMore character
 
 
-string :: Parser ( List String )
+string :: Parser String
 {-
     Parse a JSON string.
 -}
@@ -269,22 +268,22 @@ string =
         , characters
         , Parse.string "\""
         ]
-    |> Parse.withError "Expecting a string"
 
 
 -- Booleans and null ------------------------------------------------
 
-
-bool :: Parser ( List String )
+bool :: Parser String
 {-
     Parse `true` or `false`.
 -}
 bool =
-    Parse.oneOf [ Parse.string "true" , Parse.string "false" ]
-    |> Parse.withError "Expecting `true` or `false`"
+    Parse.oneOf
+        [ Parse.string "true"
+        , Parse.string "false"
+        ]
 
 
-null :: Parser ( List String )
+null :: Parser String
 {-
     Parse `null`.
 -}
@@ -294,14 +293,14 @@ null =
 
 -- JSON values ------------------------------------------------------
 
-
 atom :: Parser Json
 {-
     Parse an atomic JSON value into a `Json` value.
 -}
 atom =
-    Parse.oneOf [ string , number , bool , null ]
-    |> Parse.map ( List.foldr (++) [] >> Jatom )
+    -- todo: lieber separate konstruktoren?
+    Parse.oneOf [string, number, bool, null]
+        |> Parse.map JsonAtom
 
 
 value :: Parser Json
@@ -309,38 +308,29 @@ value :: Parser Json
     Parse a JSON value into a `Json` value.
 -}
 value =
-    Parse.oneOf [ object , array , atom ]
+    Parse.oneOf [object, array, atom]
 
 
 -- JSON arrays ------------------------------------------------------
-
 
 element :: Parser Json
 {-
     Parse an element of a JSON array.
 -}
 element =
-    Parse.sequence
-        [ Parse.throwAway whitespace
-        , Parse.map List.singleton value
-        , Parse.throwAway whitespace
-        ]
-    >> \ case
-    Err errs -> Err errs
-    Ok ( n , [ v ] , pending ) -> Ok ( n , v , pending )
-    Ok ( n , _ , _ ) -> Err [ ( n , "Expecting end of input" ) ]
+    Parse.sequence [whitespace, value, whitespace]
 
 
-elements :: Parser ( List Json )
+elements :: Parser (List Json)
 {-
     Parse elements of a JSON array.
 -}
 elements =
     Parse.sequence
-        [ Parse.map List.singleton element
+        [ element |> list
         , Parse.optional
             ( Parse.sequence
-                [ Parse.throwAway ( Parse.string "," )
+                [ skip (Parse.string ",")
                 , elements
                 ]
             )
@@ -349,62 +339,56 @@ elements =
 
 array :: Parser Json
 {-
-    Parse a JSON array into a `Jarray`.
+    Parse a JSON array into a `JsonArray`.
 -}
 array =
     Parse.sequence
-        [ Parse.throwAway ( Parse.string "[" )
-        , Parse.oneOf [ elements , Parse.throwAway whitespace ]
-        , Parse.throwAway ( Parse.string "]" )
+        [ skip (Parse.string "[")
+        , Parse.oneOf [elements, whitespace]
+        , skip (Parse.string "]")
         ]
-    |> Parse.map Jarray
+        |> Parse.map JsonArray
 
 
 -- JSON objects -----------------------------------------------------
 
-
 stringAtom :: Parser Json
 {-
     Parse a JSON string into a `Json` value.
-
     This is a version of `atom` that only parses strings.
     We need this because the keys of JSON objects are only
     allowed to be strings.
 -}
 stringAtom =
-    string
-    |> Parse.map ( List.foldr (++) [] )
-    |> Parse.map Jatom
+    Parse.sequence
+        [ whitespace
+        , Parse.map JsonAtom string
+        , whitespace
+        ]
 
 
-member :: Parser ( Json , Json )
+member :: Parser (Json, Json)
 {-
     Parse a member of a JSON object.
 -}
-member =
-    Parse.sequence
-        [ Parse.throwAway whitespace
-        , Parse.map List.singleton stringAtom
-        , Parse.throwAway whitespace
-        , Parse.throwAway ( Parse.string ":" )
-        , Parse.map List.singleton element
-        ]
-    >> \ case
-    Err errs -> Err errs
-    Ok ( n , [ k , v ] , pending ) -> Ok ( n , ( k , v ) , pending )
-    Ok ( n , _ , _ ) -> Err [ ( n , "Expecting an object member" ) ]
+member input =
+    case Parse.sequence [stringAtom, skip (Parse.string ":"), element] input of
+        Parsed (Parse.Partial {Parse.value = JsonArray [key, val], Parse.backlog = backlog}) ->
+            Parsed (Parse.Partial {Parse.value = (key, val), Parse.backlog = backlog})
+        _anythingElse ->
+            Parse.Fail
 
 
-members :: Parser ( List ( Json , Json ) )
+members :: Parser (List (Json, Json))
 {-
     Parse the members of a JSON object.
 -}
 members =
     Parse.sequence
-        [ Parse.map List.singleton member
+        [ list member
         , Parse.optional
             ( Parse.sequence
-                [ Parse.throwAway ( Parse.string "," )
+                [ skip (Parse.string ",")
                 , members
                 ]
             )
@@ -417,22 +401,17 @@ object :: Parser Json
 -}
 object =
     Parse.sequence
-        [ Parse.throwAway ( Parse.string "{" )
-        , Parse.oneOf [ members , Parse.throwAway whitespace ]
-        , Parse.throwAway ( Parse.string "}" )
+        [ skip (Parse.string "{")
+        , Parse.map JsonObject (Parse.oneOf [members, whitespace])
+        , skip (Parse.string "}")
         ]
-    |> Parse.map Jobject
 
 
 -- JSON document ----------------------------------------------------
-
 
 json :: Parser Json
 {-
     Parse an entire JSON document.
 -}
 json =
-    element >> \ case
-    Err errs -> Err errs
-    Ok ( n , done , "" ) -> Ok ( n , done , "" )
-    Ok ( n , _ , _ ) -> Err [ ( n , "Expecting end of input" ) ]
+    element

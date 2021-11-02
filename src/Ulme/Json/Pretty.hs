@@ -1,5 +1,3 @@
-module Ulme.Json.Pretty
-
 {-
     Pretty-print a JSON document.
 
@@ -14,11 +12,10 @@ module Ulme.Json.Pretty
     so I wrote my own.  It produces the same output
     for all semantically equivalent JSON documents.
 
-
     ----
 
     Copyright 2019-2020, Aramis Concepcion Duran
-    
+
     This file is part of ulme-json.
 
     Ulme-json is free software: you can redistribute it
@@ -38,14 +35,11 @@ module Ulme.Json.Pretty
     <https://www.gnu.org/licenses/>.
 -}
 
-( print
-)
-where
-
+module Ulme.Json.Pretty (print) where
 
 import Ulme
 
-import Ulme.Json ( Json ( Jatom , Jarray , Jobject ) )
+import Ulme.Json (Json (JsonArray, JsonAtom, JsonEmpty, JsonObject))
 import Ulme.String qualified as String
 
 
@@ -54,8 +48,7 @@ print :: Json -> String
     Pretty-print a JSON value.
 -}
 print value =
-    printValue value
-    |> String.join "\n"
+    printValue value |> String.join "\n"
 
 
 printValue :: Json -> List String
@@ -64,9 +57,10 @@ printValue :: Json -> List String
 -}
 printValue value =
     case value of
-    Jatom atom -> [ atom ]
-    Jarray elements -> printArray elements
-    Jobject members -> printObject members
+        JsonEmpty -> []
+        JsonAtom atom -> [atom]
+        JsonArray elements -> printArray elements
+        JsonObject members -> printObject members
 
 
 printArray :: List Json -> List String
@@ -75,11 +69,11 @@ printArray :: List Json -> List String
 -}
 printArray array =
     case array of
-    [] -> [ "[]" ]
-    firstElement : elements ->
-        printElement True firstElement
-        ++ ( elements >>= printElement False )
-        ++ [ "]" ]
+        [] -> ["[]"]
+        firstElement : elements ->
+            printElement True firstElement
+                ++ (elements >>= printElement False)
+                ++ ["]"]
 
 
 printElement :: Bool -> Json -> List String
@@ -87,34 +81,34 @@ printElement :: Bool -> Json -> List String
     Pretty-print a JSON array element as a list of strings.
 -}
 printElement isFirst element =
-    let prefix = if isFirst then "[ " else  ", " in
-    printValue element |> \ case
-    [] -> []
-    firstLine : lines -> [ prefix ++ firstLine ] ++ map ( "  " ++ ) lines
+    let prefix = if isFirst then "[ " else ", "
+     in printValue element |> \case
+            [] -> []
+            firstLine : lines -> [prefix ++ firstLine] ++ map ("  " ++) lines
 
 
-printObject :: List ( Json , Json ) -> List String
+printObject :: List (Json, Json) -> List String
 {-
     Pretty-print a JSON object as a list of strings.
 -}
 printObject object =
     case object of
-    [] -> [ "{}" ]
-    firstMember : members ->
-        printMember True firstMember
-        ++ ( members >>= printMember False )
-        ++ [ "}" ]
+        [] -> ["{}"]
+        firstMember : members ->
+            printMember True firstMember
+                ++ (members >>= printMember False)
+                ++ ["}"]
 
 
-printMember :: Bool -> ( Json , Json ) -> List String
+printMember :: Bool -> (Json, Json) -> List String
 {-
     Pretty-print a JSON object member as a list of strings.
 -}
-printMember isFirst ( key , value ) =
-    let prefix = if isFirst then "{ " else  ", " in
-    printValue key |> \ case
-    [] -> []
-    k : _ ->
-        case printValue value of
-        [ line ] -> [ prefix ++ k ++ " : " ++ line ]
-        lines -> [ prefix ++ k ++ " :" ] ++ map ( "    " ++ ) lines
+printMember isFirst (key, value) =
+    let prefix = if isFirst then "{ " else ", "
+     in printValue key |> \case
+            [] -> []
+            k : _ ->
+                case printValue value of
+                    [line] -> [prefix ++ k ++ " : " ++ line]
+                    lines -> [prefix ++ k ++ " :"] ++ map ("    " ++) lines

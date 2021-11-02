@@ -1,13 +1,10 @@
-module Ulme.Json
-
 {-
     This module provides a `Json` data type
-
 
     ----
 
     Copyright 2019-2020, Aramis Concepcion Duran
-    
+
     This file is part of ulme-json.
 
     Ulme-json is free software: you can redistribute it
@@ -27,19 +24,31 @@ module Ulme.Json
     <https://www.gnu.org/licenses/>.
 -}
 
-( Json ( Jatom , Jarray , Jobject )
-)
-where
-
+module Ulme.Json (
+    Json (JsonAtom, JsonArray, JsonObject, JsonEmpty),
+) where
 
 import Ulme
 
+import Data.Monoid (mempty)
+import Data.Semigroup ((<>))
 
-data Json
+
 {-
-    Data type for representing JSON Documents.
+    Data type for representing JSON documents.
 -}
-    = Jatom String
-    | Jarray ( List Json )
-    | Jobject ( List ( Json , Json ) )
-    deriving Show
+data Json
+    = JsonAtom String
+    | JsonArray (List Json)
+    | JsonObject (List (Json, Json))
+    | JsonEmpty
+    deriving (Show)
+
+
+instance Semigroup Json where
+    JsonEmpty <> right = right
+    left <> JsonEmpty = left
+    left <> right = JsonArray [left, right]
+
+
+instance Monoid Json where mempty = JsonEmpty
