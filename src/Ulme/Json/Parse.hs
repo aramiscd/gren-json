@@ -38,7 +38,7 @@ import Data.Monoid (mempty)
 import Ulme.Char qualified as Char
 import Ulme.Json (Json (JsonArray, JsonAtom, JsonObject))
 import Ulme.List qualified as List
-import Ulme.Parse (Parsed (Parsed), Parser)
+import Ulme.Parse (Parsed (Parsed), Parser, parse)
 import Ulme.Parse qualified as Parse
 import Ulme.String qualified as String
 
@@ -409,9 +409,9 @@ object =
 
 -- JSON document ----------------------------------------------------
 
-json :: Parser Json
+json :: String -> Maybe Json
 {-
     Parse an entire JSON document.
 -}
 json =
-    element
+    parse element
