@@ -30,7 +30,37 @@
     <https://www.gnu.org/licenses/>.
 -}
 
-module Ulme.Json.Parse (json) where
+module Ulme.Json.Parse (
+    skip,
+    list,
+    whitespace,
+    oneNine,
+    digit,
+    digits,
+    integer,
+    fraction,
+    sign,
+    exponent,
+    number,
+    hex,
+    escape,
+    char,
+    character,
+    characters,
+    string,
+    bool,
+    null,
+    atom,
+    value,
+    element,
+    elements,
+    array,
+    stringAtom,
+    member,
+    members,
+    object,
+    json,
+) where
 
 import Ulme
 
@@ -235,8 +265,8 @@ char input =
         Just head -> do
             let c = Char.toCode head
             if c < 32 || c == 34 || c == 92 || c > 1114111
-                then Parse.fail input
-                else (Parse.string (String.fromChar head)) input
+            then Parse.fail input
+            else (Parse.string (String.fromChar head)) input
 
 
 character :: Parser String
@@ -327,7 +357,7 @@ elements :: Parser (List Json)
 -}
 elements =
     Parse.sequence
-        [ element |> list
+        [ list element
         , Parse.optional
             ( Parse.sequence
                 [ skip (Parse.string ",")

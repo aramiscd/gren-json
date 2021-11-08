@@ -51,4 +51,5 @@ instance Semigroup Json where
     left <> right = JsonArray [left, right]
 
 
-instance Monoid Json where mempty = JsonEmpty
+instance Monoid Json where
+    mempty = JsonEmpty

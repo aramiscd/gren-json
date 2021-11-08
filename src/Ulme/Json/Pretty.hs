@@ -35,7 +35,13 @@
     <https://www.gnu.org/licenses/>.
 -}
 
-module Ulme.Json.Pretty (print) where
+module Ulme.Json.Pretty (
+    print,
+    printValue,
+    printArray,
+    printObject,
+    printMember,
+) where
 
 import Ulme
 
@@ -82,7 +88,7 @@ printElement :: Bool -> Json -> List String
 -}
 printElement isFirst element =
     let prefix = if isFirst then "[ " else ", "
-     in printValue element |> \case
+     in printValue element |> \ case
             [] -> []
             firstLine : lines -> [prefix ++ firstLine] ++ map ("  " ++) lines
 
@@ -106,7 +112,7 @@ printMember :: Bool -> (Json, Json) -> List String
 -}
 printMember isFirst (key, value) =
     let prefix = if isFirst then "{ " else ", "
-     in printValue key |> \case
+     in printValue key |> \ case
             [] -> []
             k : _ ->
                 case printValue value of
