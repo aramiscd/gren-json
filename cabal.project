@@ -8,4 +8,4 @@ source-repository-package
 source-repository-package
     type        : git
     location    : https://git.sr.ht/~aramis/ulme-parse
-    tag         : v0.6.3
+    tag         : v0.6.4
