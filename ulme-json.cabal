@@ -1,6 +1,6 @@
 cabal-version           : 2.2
 name                    : ulme-json
-version                 : 0.5.0
+version                 : 0.5.2
 synopsis                : parse and print json data
 homepage                : https://git.sr.ht/~aramis/ulme-json
 stability               : experimental
