@@ -3,7 +3,7 @@
 
     ----
 
-    Copyright 2019-2020, Aramis Concepcion Duran
+    Copyright 2019-2022, Aramis Concepcion Duran
 
     This file is part of ulme-json.
 
@@ -24,14 +24,15 @@
     <https://www.gnu.org/licenses/>.
 -}
 
-module Ulme.Json (
-    Json (JsonAtom, JsonArray, JsonObject, JsonEmpty),
-) where
+module Ulme.Json
+    ( Json ( JsonAtom , JsonArray , JsonObject , JsonEmpty )
+    )
+where
 
 import Ulme
 
-import Data.Monoid (mempty)
-import Data.Semigroup ((<>))
+import Data.Monoid qualified as Monoid
+import Data.Semigroup ( (<>) )
 
 
 {-
@@ -39,16 +40,16 @@ import Data.Semigroup ((<>))
 -}
 data Json
     = JsonAtom String
-    | JsonArray (List Json)
-    | JsonObject (List (Json, Json))
+    | JsonArray ( List Json )
+    | JsonObject ( List ( Json , Json ) )
     | JsonEmpty
-    deriving (Show)
+    deriving ( Show )
 
 
 instance Semigroup Json where
     JsonEmpty <> right = right
     left <> JsonEmpty = left
-    left <> right = JsonArray [left, right]
+    left <> right = JsonArray [ left , right ]
 
 
 instance Monoid Json where
