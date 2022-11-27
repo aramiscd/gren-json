@@ -1,6 +1,6 @@
 cabal-version           : 2.2
 name                    : ulme-json
-version                 : 0.5.2
+version                 : 0.5.3
 synopsis                : parse and print json data
 homepage                : https://git.sr.ht/~aramis/ulme-json
 stability               : experimental
@@ -24,6 +24,7 @@ library
                           -Wno-all-missed-specialisations
                           -Wno-missing-deriving-strategies
                           -Wno-missing-import-lists
+                          -Wno-missing-kind-signatures
                           -Wno-missing-local-signatures
                           -Wno-missing-safe-haskell-mode
                           -Wno-monomorphism-restriction
@@ -32,10 +33,13 @@ library
                           -Wno-type-defaults
                           -Wno-unsafe
                       -- dev
-                         --Wno-unused-binds
-                         --Wno-unused-imports
-                         --Wno-unused-matches
-                         --Wno-unused-packages
+                          -Wno-missing-export-lists
+                          -Wno-missing-exported-signatures
+                          -Wno-missing-signatures
+                          -Wno-unused-binds
+                          -Wno-unused-imports
+                          -Wno-unused-matches
+                          -Wno-unused-packages
 
     default-extensions  : AllowAmbiguousTypes
                           ApplicativeDo
