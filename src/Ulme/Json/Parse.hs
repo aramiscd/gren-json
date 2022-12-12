@@ -1,35 +1,8 @@
-{-
-    A JSON-parsing module.
-
-    This module provides a parser function for JSON
-    documents, based on simple parser-combinators.
-
-    I think, it is best to read this module from top
-    to bottom.  Simple parsers are introduced first.
-
-    ----
-
-    Copyright 2019-2022, Aramis Concepcion Duran
-
-    This file is part of ulme-json.
-
-    Ulme-json is free software: you can redistribute it
-    and/or modify it under the terms of the GNU General
-    Public License as published by the Free Software
-    Foundation, either version 3 of the License, or (at
-    your option) any later version.
-
-    Ulme-json is distributed in the hope that it will be
-    useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR
-    A PARTICULAR PURPOSE.  See the GNU General Public
-    License for more details.
-
-    You should have received a copy of the GNU General
-    Public License along with Foobar.  If not, see
-    <https://www.gnu.org/licenses/>.
+{- |
+    Copyright   : (c) 2019-2022 Aramís Concepción Durán
+    License     : GPL-3.0-only
+    Maintainer  : Aramís Concepción Durán <aramis@systemli.org>
 -}
-
 module Ulme.Json.Parse
     ( skip
     , list
@@ -85,7 +58,7 @@ list parser =
 
 
 whitespace :: Monoid a => Parser a
-{-
+{- ^
     Parse whitespace (greedy).
 -}
 whitespace =
@@ -101,10 +74,10 @@ whitespace =
         )
 
 
--- Integers ---------------------------------------------------------
+-- Integers
 
 oneNine :: Parser String
-{-
+{- ^
     Parse a non-zero decimal digit.
 -}
 oneNine =
@@ -122,7 +95,7 @@ oneNine =
 
 
 digit :: Parser String
-{-
+{- ^
     Parse a decimal digit.
 -}
 digit =
@@ -133,7 +106,7 @@ digit =
 
 
 digits :: Parser String
-{-
+{- ^
     Parse as many decimal digits as possible but at
     least one.
 -}
@@ -142,10 +115,10 @@ digits =
 
 
 integer :: Parser String
-{-
+{- ^
     Parse an integer.
-    Only decimal notation, no leading zeros, with or
-    without a leading minus.
+
+    Only decimal notation, no leading zeros, with or without a leading minus.
 -}
 integer =
     Parse.oneOf
@@ -156,10 +129,10 @@ integer =
         ]
 
 
--- Floating-point numbers -------------------------------------------
+-- Floating-point numbers
 
 fraction :: Parser String
-{-
+{- ^
     Parse the fractional part of a floating-point number.
 -}
 fraction =
@@ -170,10 +143,10 @@ fraction =
 
 
 sign :: Parser String
-{-
+{- ^
     Parse the sign of a scientific exponential suffix.
-    This is NOT the optional sign in front of a JSON
-    number.
+
+    This is NOT the optional sign in front of a JSON number.
 -}
 sign =
     Parse.optional
@@ -185,9 +158,8 @@ sign =
 
 
 exponent :: Parser String
-{-
-    Parse the scientific exponential suffix of a number
-    (if any).
+{- ^
+    Parse the scientific exponential suffix of a number (if any).
 -}
 exponent =
     Parse.sequence
@@ -198,11 +170,11 @@ exponent =
 
 
 number :: Parser String
-{-
+{- ^
     Parse a JSON number.
-    JSON numbers are either integer or floating-point,
-    with or without a scientific exponential suffix.
-    Only decimal notation is valid: no hex, no octal.
+
+    JSON numbers are either integer or floating-point, with or without a scientific exponential suffix.  Only decimal
+    notation is valid: no hex, no octal.
 -}
 number =
     Parse.sequence
@@ -212,10 +184,10 @@ number =
         ]
 
 
--- Strings ----------------------------------------------------------
+-- Strings
 
 hex :: Parser String
-{-
+{- ^
     Parse a hexadecimal digit.
 -}
 hex =
@@ -239,7 +211,7 @@ hex =
 
 
 escape :: Parser String
-{-
+{- ^
     Parse an escape character.
 -}
 escape =
@@ -257,13 +229,13 @@ escape =
 
 
 char :: Parser String
-{-
+{- ^
     Parse an unescaped character.
 -}
 char input =
-    case List.head input of
+    case String.uncons input of
         Nothing -> Parse.fail input
-        Just head -> do
+        Just ( head , _ ) -> do
             let c = Char.toCode head
             if c < 32 || c == 34 || c == 92 || c > 1114111
             then Parse.fail input
@@ -271,7 +243,7 @@ char input =
 
 
 character :: Parser String
-{-
+{- ^
     Parse a character.
 -}
 character =
@@ -282,7 +254,7 @@ character =
 
 
 characters :: Parser String
-{-
+{- ^
     Parse any number of characters.
 -}
 characters =
@@ -290,7 +262,7 @@ characters =
 
 
 string :: Parser String
-{-
+{- ^
     Parse a JSON string.
 -}
 string =
@@ -301,10 +273,10 @@ string =
         ]
 
 
--- Booleans and null ------------------------------------------------
+-- Booleans and null
 
 bool :: Parser String
-{-
+{- ^
     Parse `true` or `false`.
 -}
 bool =
@@ -315,17 +287,17 @@ bool =
 
 
 null :: Parser String
-{-
+{- ^
     Parse `null`.
 -}
 null =
     Parse.string "null"
 
 
--- JSON values ------------------------------------------------------
+-- JSON values
 
 atom :: Parser Json
-{-
+{- ^
     Parse an atomic JSON value into a `Json` value.
 -}
 atom =
@@ -335,17 +307,17 @@ atom =
 
 
 value :: Parser Json
-{-
+{- ^
     Parse a JSON value into a `Json` value.
 -}
 value =
     Parse.oneOf [ object , array , atom ]
 
 
--- JSON arrays ------------------------------------------------------
+-- JSON arrays
 
 element :: Parser Json
-{-
+{- ^
     Parse an element of a JSON array.
 -}
 element =
@@ -353,7 +325,7 @@ element =
 
 
 elements :: Parser ( List Json )
-{-
+{- ^
     Parse elements of a JSON array.
 -}
 elements =
@@ -369,7 +341,7 @@ elements =
 
 
 array :: Parser Json
-{-
+{- ^
     Parse a JSON array into a `JsonArray`.
 -}
 array =
@@ -381,13 +353,13 @@ array =
         |> Parse.map JsonArray
 
 
--- JSON objects -----------------------------------------------------
+-- JSON objects
 
 stringAtom :: Parser Json
-{-
+{- ^
     Parse a JSON string into a `Json` value.
-    This is a version of `atom` that only parses strings.
-    We need this because the keys of JSON objects are only
+
+    This is a version of `atom` that only parses strings.  We need this because the keys of JSON objects are only
     allowed to be strings.
 -}
 stringAtom =
@@ -399,7 +371,7 @@ stringAtom =
 
 
 member :: Parser ( Json , Json )
-{-
+{- ^
     Parse a member of a JSON object.
 -}
 member input =
@@ -411,7 +383,7 @@ member input =
 
 
 members :: Parser ( List ( Json , Json ) )
-{-
+{- ^
     Parse the members of a JSON object.
 -}
 members =
@@ -427,7 +399,7 @@ members =
 
 
 object :: Parser Json
-{-
+{- ^
     Parse a JSON object.
 -}
 object =
@@ -438,10 +410,10 @@ object =
         ]
 
 
--- JSON document ----------------------------------------------------
+-- JSON document
 
 json :: String -> Maybe Json
-{-
+{- ^
     Parse an entire JSON document.
 -}
 json =

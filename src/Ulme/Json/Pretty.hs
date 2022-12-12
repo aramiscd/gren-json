@@ -1,4 +1,4 @@
-{-
+{- |
     Pretty-print a JSON document.
 
     I like how `elm-format` lays out commas as prefixes:
@@ -8,9 +8,8 @@
         , baz
         ]
 
-    No existing JSON pretty-printer supported this layout,
-    so I wrote my own.  It produces the same output
-    for all semantically equivalent JSON documents.
+    No existing JSON pretty-printer supported this layout, so I wrote my own.  It produces the same output for
+    all semantically equivalent JSON documents.
 
     ----
 
@@ -18,23 +17,17 @@
 
     This file is part of ulme-json.
 
-    Ulme-json is free software: you can redistribute it
-    and/or modify it under the terms of the GNU General
-    Public License as published by the Free Software
-    Foundation, either version 3 of the License, or (at
-    your option) any later version.
+    Ulme-json is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
+    License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
+    any later version.
 
-    Ulme-json is distributed in the hope that it will be
-    useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR
-    A PARTICULAR PURPOSE.  See the GNU General Public
-    License for more details.
+    Ulme-json is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
+    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
 
-    You should have received a copy of the GNU General
-    Public License along with Foobar.  If not, see
+    You should have received a copy of the GNU General Public License along with Foobar.  If not, see
     <https://www.gnu.org/licenses/>.
 -}
-
 module Ulme.Json.Pretty
     ( print
     , printValue
@@ -46,21 +39,19 @@ where
 
 import Ulme
 
-import Data.Text qualified as Text
 import Ulme.Json ( Json ( JsonArray , JsonAtom , JsonEmpty , JsonObject ) )
 import Ulme.String qualified as String
 
 
 print :: Json -> String
-{-
+{- ^
     Pretty-print a JSON value.
 -}
-print value =
-    printValue value |> String.join "\n"
+print value = printValue value |> String.join "\n"
 
 
 printValue :: Json -> List String
-{-
+{- ^
     Pretty-print a JSON value as a list of strings.
 -}
 printValue value =
@@ -72,7 +63,7 @@ printValue value =
 
 
 printArray :: List Json -> List String
-{-
+{- ^
     Pretty-print a JSON array as a list of strings.
 -}
 printArray array =
@@ -85,20 +76,18 @@ printArray array =
 
 
 printElement :: Bool -> Json -> List String
-{-
+{- ^
     Pretty-print a JSON array element as a list of strings.
 -}
-printElement isFirst element =
-    let
-        prefix = if isFirst then "[ " else ", "
-    in
-        printValue element |> \ case
-            [] -> []
-            firstLine : lines -> [ prefix ++ firstLine ] ++ map ( "  " ++ ) lines
+printElement isFirst element = do
+    let prefix = if isFirst then "[ " else ", "
+    printValue element |> \ case
+        [] -> []
+        firstLine : lines -> [ prefix ++ firstLine ] ++ map ( "  " ++ ) lines
 
 
 printObject :: List ( Json , Json ) -> List String
-{-
+{- ^
     Pretty-print a JSON object as a list of strings.
 -}
 printObject object =
@@ -111,7 +100,7 @@ printObject object =
 
 
 printMember :: Bool -> ( Json , Json ) -> List String
-{-
+{- ^
     Pretty-print a JSON object member as a list of strings.
 -}
 printMember isFirst ( key , value ) =
