@@ -1,6 +1,6 @@
 cabal-version           : 2.2
 name                    : ulme-json
-version                 : 0.6.0
+version                 : 0.7.0
 synopsis                : parse and print json data
 homepage                : https://git.sr.ht/~aramis/ulme-json
 copyright               : (c) 2019-2022 Aramís Concepción Durán
@@ -14,6 +14,11 @@ description             : This package contains a JSON data type, a JSON parser,
                           for JSON serialisation and pretty-printing.
 
 
+flag dev
+    default             : False
+    manual              : True
+
+
 library
     default-language    : Haskell2010
     hs-source-dirs      : src
@@ -23,21 +28,23 @@ library
                           -Wno-all-missed-specialisations
                           -Wno-missing-deriving-strategies
                           -Wno-missing-import-lists
+                          -Wno-missing-kind-signatures
                           -Wno-missing-local-signatures
                           -Wno-missing-safe-haskell-mode
                           -Wno-monomorphism-restriction
+                          -Wno-operator-whitespace
                           -Wno-redundant-constraints
                           -Wno-safe
                           -Wno-type-defaults
                           -Wno-unsafe
-                      -- dev
-                         --Wno-missing-export-lists
-                         --Wno-missing-exported-signatures
-                         --Wno-missing-signatures
-                         --Wno-unused-binds
-                         --Wno-unused-imports
-                         --Wno-unused-matches
-                         --Wno-unused-packages
+    if flag(dev)
+        ghc-options     : -Wno-missing-export-lists
+                          -Wno-missing-exported-signatures
+                          -Wno-missing-signatures
+                          -Wno-unused-binds
+                          -Wno-unused-imports
+                          -Wno-unused-matches
+                          -Wno-unused-packages
 
     default-extensions  : AllowAmbiguousTypes
                           ApplicativeDo
@@ -61,6 +68,7 @@ library
                           NoImplicitPrelude
                           NumDecimals
                           NumericUnderscores
+                          OverloadedRecordDot
                           OverloadedStrings
                           PackageImports
                           RecordWildCards
