@@ -1,6 +1,6 @@
 cabal-version           : 2.2
 name                    : ulme-json
-version                 : 0.7.0
+version                 : 0.8.0
 synopsis                : parse and print json data
 homepage                : https://git.sr.ht/~aramis/ulme-json
 copyright               : (c) 2019-2022 Aramís Concepción Durán
