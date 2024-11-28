@@ -1,0 +1,13 @@
+module Json exposing ( Json (..) )
+
+
+-- Datentyp für JSON-Werte
+--
+type Json
+    = Null
+    | False
+    | True
+    | Number String
+    | String String
+    | Array ( Array Json )
+    | Object ( Array { key : Json, value : Json } )
