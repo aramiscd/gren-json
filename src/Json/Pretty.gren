@@ -1,10 +1,17 @@
 module Json.Pretty exposing ( print )
 
+{-| @docs print
+-}
+
 import Json exposing ( Json )
 
 
--- Formatiere einen JSON-Wert
---
+{-| Pretty-print a JSON value.
+
+The result is exclusively a function of the JSON syntax tree.
+The formatting of the input is irrelevant.
+Commas are positioned at the beginning of the line.
+-}
 print : Json -> String
 print value =
     printValue value |> String.join "\n"

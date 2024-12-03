@@ -1,20 +1,14 @@
-module Main exposing ( main )
+module Tests.Pure exposing ( tests )
 
 import Expect exposing ( Expectation )
 import Fuzz exposing ( Fuzzer )
 import Test exposing ( Test, test )
-import Test.Runner.Node
 
 import Json
 import Json.Parse exposing ( json )
--- import Parse exposing ( Parser )
 
 
-
-main =
-    Test.Runner.Node.run tests
-
-
+tests : Test
 tests =
     Test.concat
         -------------------------------------------------------------------------------------------------------------
@@ -148,7 +142,7 @@ fuzzZeroOrMore fuzzer =
 
 
 
--- Symbollisten
+-- Symbol lists
 
 
 whitespace : Array String

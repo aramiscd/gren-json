@@ -1,10 +1,10 @@
 {
     "type": "package",
     "platform": "common",
-    "name": "author/project",
-    "summary": "helpful summary of your project, less than 80 characters",
+    "name": "aramiscd/gren-json",
+    "summary": "JSON parser, JSON pretty-printer, JSON data type",
     "license": "BSD-3-Clause",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "exposed-modules": [
         "Json",
         "Json.Parse",
@@ -12,7 +12,7 @@
     ],
     "gren-version": "0.4.5 <= v < 0.5.0",
     "dependencies": {
-        "aramiscd/gren-parse": "1.1.0 <= v < 2.0.0",
+        "aramiscd/gren-parse": "1.2.0 <= v < 2.0.0",
         "gren-lang/core": "5.1.1 <= v < 6.0.0",
         "gren-lang/parser": "4.0.0 <= v < 5.0.0"
     }

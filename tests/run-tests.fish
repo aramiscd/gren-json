@@ -1,4 +1,5 @@
 #!/usr/bin/env fish
 
-gren make ../src/**.gren ./**.gren
-and node app
+gren make src/Main.gren --output=run-tests
+and node run-tests
+rm run-tests

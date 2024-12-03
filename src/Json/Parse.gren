@@ -1,20 +1,28 @@
 module Json.Parse exposing ( run, json )
 
+{-| A simple JSON parser.
+
+@docs run, json
+-}
+
 import Json exposing ( Json )
 import Json.Parse.Number exposing ( number )
 import Json.Parse.String exposing ( string )
 import Parse exposing ( Parser )
 
 
--- Führe den JSON-Parser aus
---
+{-| Parse a JSON value.
+-}
 run : String -> Maybe Json
 run input =
     Parse.run json input
 
 
--- Parse ein JSON-Dokument
---
+{-| Parse a JSON value into an intermediate results.
+
+This allows you to examine how far the parser gets for a specific input and what exactly it collects.
+I mainly expose this for my test code.
+-}
 json : Parser Json
 json input =
     element input

@@ -1,0 +1,52 @@
+module TestRunner exposing ( run )
+
+import FileSystem
+import Node
+import Random
+import Stream
+import Task exposing ( Task )
+import Test exposing ( Test )
+import Test.Runner.String exposing ( Summary )
+
+
+type alias Args =
+    { environment : Node.Environment
+    , fileSystemPermission : FileSystem.Permission
+    , runs : Int
+    , seed : Random.Seed
+    }
+
+
+run : Args -> Test -> Task x Bool
+run args tests =
+    Test.Runner.String.runWithOptions args.runs args.seed tests
+    |> logOutput args.environment
+ 
+
+summarize : Summary -> String
+summarize { output, passed, failed, autoFail } =
+    let
+        headline =
+            if failed > 0 then "TEST RUN FAILED"
+            else case autoFail of
+                Nothing -> "TEST RUN PASSED"
+                Just reason -> "TEST RUN FAILED because " ++ reason
+    in
+        String.join "\n"
+            [ output
+            , headline
+            , ""
+            , "Passed: " ++ String.fromInt passed
+            , "Failed: " ++ String.fromInt failed
+            ]
+
+
+logOutput : Node.Environment -> Summary -> Task x Bool
+logOutput env summary =
+    let
+        output = summarize summary
+        success = summary.failed == 0 && summary.autoFail == Nothing
+        printStream = if success then env.stdout else env.stderr
+    in
+        Stream.sendLine printStream output
+        |> Task.map ( \ _ -> success )

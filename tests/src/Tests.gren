@@ -1,0 +1,16 @@
+module Tests exposing ( tests )
+
+import FileSystem
+import Task exposing ( Task )
+import Test exposing ( Test )
+import Tests.Effectful
+import Tests.Pure
+
+
+tests : FileSystem.Permission -> Task Never Test
+tests fileSystemPermission =
+    [ Task.succeed Tests.Pure.tests
+    , Tests.Effectful.tests fileSystemPermission
+    ]
+    |> Task.sequence
+    |> Task.map Test.concat
