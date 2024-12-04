@@ -1,0 +1,8 @@
+module Main exposing ( main )
+
+import Test.Runner.Node exposing ( run )
+import Tests exposing ( tests )
+
+
+main =
+    run tests

@@ -1,18 +1,11 @@
-module Main exposing ( main )
+module Tests exposing ( tests )
 
 import Expect exposing ( Expectation )
 import Fuzz exposing ( Fuzzer )
 import Test exposing ( Test, test )
-import Test.Runner.Node
 
 import Json
 import Json.Parse exposing ( json )
--- import Parse exposing ( Parser )
-
-
-
-main =
-    Test.Runner.Node.run tests
 
 
 tests =
@@ -113,6 +106,32 @@ tests =
             )
         -------------------------------------------------------------------------------------------------------------
         ]
+
+
+-- todo: ich würde gern auch diese dateien abtesten, aber dafür muss erst mal eine
+-- vollständige nodejs anwendung hochziehen.
+--
+-- ./gren.json
+-- 
+-- ./json-test-data/microsoftedge.github.io/Demos/json-dummy-data/64KB.json
+-- ./json-test-data/microsoftedge.github.io/Demos/json-dummy-data/128KB.json
+-- ./json-test-data/microsoftedge.github.io/Demos/json-dummy-data/256KB.json
+-- ./json-test-data/microsoftedge.github.io/Demos/json-dummy-data/512KB.json
+-- ./json-test-data/microsoftedge.github.io/Demos/json-dummy-data/1MB.json
+-- ./json-test-data/microsoftedge.github.io/Demos/json-dummy-data/5MB.json
+-- 
+-- ./json-test-data/microsoftedge.github.io/Demos/json-dummy-data/64KB-min.json
+-- ./json-test-data/microsoftedge.github.io/Demos/json-dummy-data/128KB-min.json
+-- ./json-test-data/microsoftedge.github.io/Demos/json-dummy-data/256KB-min.json
+-- ./json-test-data/microsoftedge.github.io/Demos/json-dummy-data/512KB-min.json
+-- ./json-test-data/microsoftedge.github.io/Demos/json-dummy-data/1MB-min.json
+-- ./json-test-data/microsoftedge.github.io/Demos/json-dummy-data/5MB-min.json
+-- 
+-- ./json-test-data/microsoftedge.github.io/Demos/json-dummy-data/missing-colon.json
+-- ./json-test-data/microsoftedge.github.io/Demos/json-dummy-data/unterminated.json
+-- ./json-test-data/microsoftedge.github.io/Demos/json-dummy-data/binary-data.json
+-- 
+-- ./json-test-data/raw.githubusercontent.com/json-iterator/test-data/refs/heads/master/large-file.json
 
 
 

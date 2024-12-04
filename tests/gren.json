@@ -2,7 +2,7 @@
     "type": "application",
     "platform": "node",
     "source-directories": [
-        ".",
+        "src",
         "../src"
     ],
     "gren-version": "0.4.5",
