@@ -16,7 +16,7 @@ Note that Gren's standard library is already equipped with modules for
 
 This package is still useful if
 
-- you want to explore a very simple combinatorial parser,
+- you want to explore a very simple combinaty parser,
 - if you need a simple intermediate data type for JSON values, or
 - if you like your JSON formatted independently of whitespace and with prefix commas.
 
