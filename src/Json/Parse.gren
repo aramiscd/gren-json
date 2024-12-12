@@ -1,8 +1,14 @@
 module Json.Parse exposing ( run, json )
 
-{-| A simple JSON parser.
+{-| JSON parser.
 
-@docs run, json
+## Parser
+
+@docs run
+
+## Internals
+
+@docs json
 -}
 
 import Json exposing ( Json )
@@ -18,7 +24,7 @@ run input =
     Parse.run json input
 
 
-{-| Parse a JSON value into an intermediate results.
+{-| Parse a JSON value into an intermediate result.
 
 This allows you to examine how far the parser gets for a specific input and what exactly it collects.
 I mainly expose this for my test code.

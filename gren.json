@@ -4,7 +4,7 @@
     "name": "aramiscd/gren-json",
     "summary": "JSON parser, JSON pretty-printer, JSON data type",
     "license": "BSD-3-Clause",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "exposed-modules": [
         "Json",
         "Json.Parse",

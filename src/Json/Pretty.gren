@@ -1,6 +1,8 @@
 module Json.Pretty exposing ( print )
 
-{-| @docs print
+{-| JSON Pretty-printer.
+
+@docs print
 -}
 
 import Json exposing ( Json )
