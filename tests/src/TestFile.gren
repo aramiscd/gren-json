@@ -1,0 +1,44 @@
+module TestFile exposing ( Args, Expectation (..), testFile )
+{-
+
+Teste den JSON-Parser anhand eines JSON-Dokumentes, das aus einer Datei gelesen wird.
+Das Modul unterstützt positive und negative Tests.
+
+-}
+import Bytes
+import Expect
+import FileSystem
+import FileSystem.Path
+import Json.Parse exposing ( json )
+import Test.Runner.Effectful as Test exposing ( Test, await, test )
+
+
+type alias Args =
+    { expectation : Expectation
+    , fsPermission : FileSystem.Permission
+    , path : String
+    }
+
+
+type Expectation = Fail | Pass
+
+
+testFile: Args -> Test
+testFile args =
+    let
+        fsPath = FileSystem.Path.fromPosixString args.path
+
+        description = when args.expectation is
+            Fail -> "should fail"
+            Pass -> "should pass"
+
+        expectation = when args.expectation is
+            Fail -> Expect.equal Nothing
+            Pass -> Expect.notEqual Nothing
+    in
+        await ( FileSystem.readFile args.fsPermission fsPath ) args.path
+        <| \ jsonBytes -> test description
+        <| \ _ -> expectation
+        <| Json.Parse.run
+        <| Maybe.withDefault ""
+        <| Bytes.toString jsonBytes

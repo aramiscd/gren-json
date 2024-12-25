@@ -1,27 +1,23 @@
-module Json.Parse.Number exposing ( number, digit )
+module Json.Parse.Number exposing ( jsonNumber )
 
-import Json exposing ( Json )
-import Parse exposing ( Parser )
+import StringParser.Parse as Parse exposing ( Parser )
 
 
--- Parse eine JSON-Zahl
---
--- JSON-Zahlen sind entweder Ganze Zahlen oder Gleitkommazahlen,
--- mit oder ohne wissenschftliches Exponentialsuffix.  Nur die
--- Dezimaldarstellung ist zulässig, keine Hexademizalzahlen, keine
--- Oktalzahlen.
---
-number : Parser Json
-number =
+{-| Parse eine JSON-Zahl
+
+JSON-Zahlen sind entweder Ganze Zahlen oder Gleitkommazahlen, mit oder ohne wissenschftliches Exponentialsuffix.
+Nur die Dezimaldarstellung ist zulässig, keine Hexademizalzahlen, keine Oktalzahlen.
+-}
+jsonNumber : Parser String
+jsonNumber =
     Parse.sequence [ integer, fraction, exponent ]
-    |> Parse.map ( String.join "" >> Json.Number >> Array.singleton )
+    |> Parse.map ( String.join "" >> Array.singleton )
 
 
--- Parse eine Ganze Zahl
---
--- Nur Dezimalnotation, keine führenden Nullen, mit oder ohne
--- führendes Minus
---
+{-| Parse eine Ganze Zahl
+
+Nur Dezimalnotation, keine führenden Nullen, mit oder ohne führendes Minus
+-}
 integer : Parser String
 integer =
     Parse.oneOf
@@ -32,36 +28,36 @@ integer =
         ]
 
 
--- Parse so viele Ziffern wie möglich aber mindestens eine
---
+{-| Parse so viele Ziffern wie möglich aber mindestens eine
+-}
 digits : Parser String
 digits =
     Parse.oneOrMore digit
 
 
--- Parse eine Ziffer
---
+{-| Parse eine Ziffer
+-}
 digit : Parser String
 digit =
     Parse.oneOf [ Parse.string "0", oneNine ]
 
 
--- Parse eine positive Ziffer
---
+{-| Parse eine positive Ziffer
+-}
 oneNine : Parser String
 oneNine =
     Parse.oneOf <| Array.map Parse.string <| String.split "" "123456789"
 
 
--- Parse den gebrochenen Teil einer Gleitkommazahl
---
+{-| Parse den gebrochenen Teil einer Gleitkommazahl
+-}
 fraction : Parser String
 fraction =
     Parse.optional <| Parse.sequence [ Parse.string ".", digits ]
 
 
--- Parse das Exponentialsuffix der wissenschaftlichen Zahlennotation
---
+{-| Parse das Exponentialsuffix der wissenschaftlichen Zahlennotation
+-}
 exponent : Parser String
 exponent =
     Parse.optional <| Parse.oneOf
@@ -70,11 +66,11 @@ exponent =
         ]
 
 
--- Parse ein Signum
---
--- Achtung: Das wird in der wissenschaftlichen Notation verwendet.
--- Herkömmlich notierte Zahlen haben eine andere Syntax in JSON!
---
+{-| Parse ein Signum
+
+Achtung: Das wird in der wissenschaftlichen Notation verwendet.
+Herkömmlich notierte Zahlen haben eine andere Syntax in JSON!
+-}
 sign : Parser String
 sign =
     Parse.optional <| Parse.oneOf [ Parse.string "+", Parse.string "-" ]

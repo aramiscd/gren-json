@@ -1,37 +1,53 @@
+-- todo: überarbeiten
 module Json.Parse exposing ( run, json )
 
-{-| JSON parser.
+{-| JSON parser
+
+---
+---
 
 ## Parser
 
+---
+
 @docs run
+
+---
+---
 
 ## Internals
 
+---
+
 @docs json
+
 -}
 
 import Json exposing ( Json )
-import Json.Parse.Number exposing ( number )
-import Json.Parse.String exposing ( string )
-import Parse exposing ( Parser )
+import Json.Parse.Number exposing ( jsonNumber )
+import Json.Parse.String exposing ( jsonString, discard )
+import Json.Parse.Tokenizer exposing ( Token, tokenize )
+import StringParser.Parse as Parse exposing ( Parser )
 
 
-{-| Parse a JSON value.
+{-| Parse a JSON value
 -}
 run : String -> Maybe Json
 run input =
     Parse.run json input
 
 
-{-| Parse a JSON value into an intermediate result.
+{-| Parse a JSON value into an intermediate result
 
 This allows you to examine how far the parser gets for a specific input and what exactly it collects.
 I mainly expose this for my test code.
 -}
 json : Parser Json
 json input =
-    element input
+    let
+        parse = tokenize |> Parse.andThen element
+    in
+        parse input
 
 
 -- Parse einen JSON-Wert
@@ -41,106 +57,113 @@ value input =
     let
         parse =
             Parse.oneOf
-                [ object
-                , array
-                , string
-                , number
-                , Parse.string "false" |> Parse.map ( \ _ -> [ Json.False ] )
-                , Parse.string "true"  |> Parse.map ( \ _ -> [ Json.True  ] )
-                , Parse.string "null"  |> Parse.map ( \ _ -> [ Json.Null  ] )
+                [ -- jsonObject
+--              , jsonArray
+--              , jsonString |> Parse.map ( Array.map Json.String )
+--              , jsonNumber |> Parse.map ( Array.map Json.Number )
+--              , Parse.string "false" |> Parse.map ( \ _ -> [ Json.False ] )
+--              , Parse.string "true"  |> Parse.map ( \ _ -> [ Json.True  ] )
+--              , Parse.string "null"  |> Parse.map ( \ _ -> [ Json.Null  ] )
                 ]
     in
         parse input
 
 
--- Parse ein JSON-Objekt
---
-object : Parser Json
-object input =
-    let
-        parse =
-            Parse.map ( Array.singleton << Json.Object ) <| Parse.oneOf
-                [ Parse.sequence [ discard "{", ws, discard "}" ]
-                , Parse.sequence [ discard "{", members, discard "}" ]
-                ]
-    in
-        parse input
+-- -- Parse ein JSON-Objekt
+-- --
+-- jsonObject : Parser Json
+-- jsonObject input =
+--     let
+--         parse =
+--             Parse.map ( Array.singleton << Json.Object ) <| Parse.oneOf
+--                 [ Parse.sequence [ discard "{", whitespace, discard "}" ]
+--                 , Parse.sequence [ discard "{", members, discard "}" ]
+--                 ]
+--     in
+--         parse input
 
 
--- Parse die Schlüssel-Wert-Paare eines JSON-Objektes
---
-members : Parser { key : Json, value : Json }
-members input =
-    let
-        parse =
-            Parse.sequence
-                [ member
-                , Parse.zeroOrMore <| Parse.sequence [ discard ",", member ]
-                ]
-    in
-        parse input
+-- -- Parse die Schlüssel-Wert-Paare eines JSON-Objektes
+-- --
+-- members : Parser { key : Json, value : Json }
+-- members input =
+--     let
+--         parse =
+--             Parse.sequence
+--                 [ member
+--                 , Parse.zeroOrMore <| Parse.sequence [ discard ",", member ]
+--                 ]
+--     in
+--         parse input
 
 
--- Parse ein Schlüssel-Wert-Paar eines JSON-Objektes
---
-member : Parser { key : Json, value : Json }
-member input =
-    let
-        parse =
-            Parse.sequence [ ws, string, ws, discard ":", element ]
-            |> Parse.andThen
-                ( \ result -> case result.values of
-                    [ Json.String k, v ] ->
-                        Just
-                            { backlog = result.backlog
-                            , values = [ { key = Json.String k, value = v } ]
-                            }
-                    _ ->
-                        Nothing
-                )
-    in
-        parse input
+-- -- Parse ein Schlüssel-Wert-Paar eines JSON-Objektes
+-- --
+-- member : Parser { key : Json, value : Json }
+-- member input =
+--     let
+--         parse =
+--             Parse.sequence
+--                 [ whitespace
+--                 , jsonString |> Parse.map ( Array.map Json.String )
+--                 , whitespace
+--                 , discard ":"
+--                 , element
+--                 ]
+--             |> Parse.andThen
+--                 ( \ result -> when result.values is
+--                     [ Json.String k, v ] ->
+--                         Just
+--                             { backlog = result.backlog
+--                             , values = [ { key = Json.String k, value = v } ]
+--                             }
+--                     _ ->
+--                         Nothing
+--                 )
+--     in
+--         parse input
 
 
--- Parse ein JSON-Array
---
-array : Parser Json
-array input =
-    let
-        parse =
-            Parse.map ( Array.singleton << Json.Array ) <| Parse.oneOf
-                [ Parse.sequence [ discard "[", ws, discard "]" ]
-                , Parse.sequence [ discard "[", elements, discard "]" ]
-                ]
-    in
-        parse input
+-- -- Parse ein JSON-Array
+-- --
+-- jsonArray : Parser Json
+-- jsonArray input =
+--     let
+--         parse =
+--             Parse.map ( Array.singleton << Json.Array ) <| Parse.oneOf
+--                 [ Parse.sequence [ discard "[", whitespace, discard "]" ]
+--                 , Parse.sequence [ discard "[", elements, discard "]" ]
+--                 ]
+--     in
+--         parse input
 
 
--- Parse die Elemente eines JSON-Array
---
-elements : Parser Json
-elements input =
-    let
-        parse =
-            Parse.sequence
-                [ element
-                , Parse.zeroOrMore <| Parse.sequence [ discard ",", element ]
-                ]
-    in
-        parse input
+-- -- Parse die Elemente eines JSON-Array
+-- --
+-- elements : Parser Json
+-- elements input =
+--     let
+--         parse =
+--             Parse.sequence
+--                 [ element
+--                 , Parse.zeroOrMore <| Parse.sequence [ discard ",", element ]
+--                 ]
+--     in
+--         parse input
 
 
 -- Parse ein Element eines JSON-Array
 --
-element : Parser Json
-element input =
-    Parse.sequence [ ws, value, ws ] input
+-- element : Parse.Result Token -> Parse.Result Json
+element { backlog, values } =
+    Parse.fail "" -- todo
+    -- Parse.sequence [ whitespace, value, whitespace ] input
 
 
--- Parse whitespace (greedy)
+-- Parse und verwirf Whitespace (greedy)
 --
-ws : Parser a
-ws input =
+whitespace : Parser a
+whitespace input =
     let
         parse =
             Parse.map ( \ _ -> [] ) <| Parse.zeroOrMore <| Parse.oneOf
@@ -151,10 +174,3 @@ ws input =
                 ]
     in
         parse input
-
-
--- Parse einen String und verwirf das Ergebnis
---
-discard : String -> Parser a
-discard match input =
-    Parse.map ( \ _ -> [] ) ( Parse.string match ) input

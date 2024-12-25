@@ -1,0 +1,48 @@
+module Fuzzers exposing
+    ( chars
+    , number
+    , whitespace
+    )
+
+import Fuzz exposing ( Fuzzer )
+
+
+chars : Fuzzer String
+chars =
+    -- todo: das geht gründlicher
+    "abcdefgh" |> String.split "" |> Fuzz.oneOfValues |> zeroOrMore
+
+
+number : Fuzzer String
+number =
+    Fuzz.sequence
+        [ "123456789" |> String.split "" |> Fuzz.oneOfValues
+        , "0123456789" |> String.split "" |> Fuzz.oneOfValues |> zeroOrMore
+        ]
+    |> Fuzz.map ( String.join "" )
+
+
+whitespace : Fuzzer String
+whitespace =
+    Fuzz.uniformInt 3
+    |> Fuzz.map ( \ n -> Array.get n wsChars |> Maybe.withDefault " " )
+    |> Fuzz.array
+    |> Fuzz.map ( String.join "" )
+
+
+zeroOrMore : Fuzzer String -> Fuzzer String
+zeroOrMore fuzzer =
+    Fuzz.array fuzzer |> Fuzz.map ( String.join "" )
+
+
+
+-- Symbollisten
+
+
+wsChars : Array String
+wsChars =
+    [ "\u{0020}"    -- space
+    , "\u{000D}"    -- carriage return
+    , "\u{000A}"    -- line feed
+    , "\u{0009}"    -- tab
+    ]

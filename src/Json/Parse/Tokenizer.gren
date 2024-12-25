@@ -1,0 +1,83 @@
+module Json.Parse.Tokenizer exposing ( Token, tokenize )
+
+import Json exposing ( Json )
+import Json.Parse.Number exposing ( jsonNumber )
+import Json.Parse.String exposing ( jsonString )
+import StringParser.Parse as Parse exposing ( Parser )
+
+
+type Token
+    = JsonAtom Json
+    | JsonDelimiter String
+
+
+{-| Zerlege die Eingabe in eine Folge von atomaren JSON-Werten und Trennzeichen
+-}
+tokenize : Parser Token
+tokenize input =
+    let
+        parse = 
+            Parse.sequence
+                [ whitespace
+                , Parse.zeroOrMore <| Parse.oneOf [ jsonAtom, jsonDelimiter ]
+                , whitespace
+                ]
+        
+        
+    in
+        parse input
+
+
+{-| Parse einen atomaren JSON-Wert
+-}
+jsonAtom : Parser Token
+jsonAtom input =
+    let
+        parse =
+            Parse.map ( Array.map JsonAtom ) <| Parse.oneOf
+                [ Parse.map ( Array.map ( Json.String ) ) jsonString
+                , Parse.map ( Array.map Json.Number ) jsonNumber
+                , Parse.map ( \ _ -> [ Json.False ] ) <| Parse.string "false"
+                , Parse.map ( \ _ -> [ Json.True  ] ) <| Parse.string "true"
+                , Parse.map ( \ _ -> [ Json.Null  ] ) <| Parse.string "null"
+                ]
+    in
+        parse input
+
+
+{-| Parse ein Begrenzungszeichen
+-}
+jsonDelimiter : Parser Token
+jsonDelimiter input =
+    let
+        parse =
+            Parse.map ( Array.map JsonDelimiter ) <| Parse.sequence
+                [ whitespace
+                , Parse.oneOf
+                    [ Parse.string ","
+                    , Parse.string ":"
+                    , Parse.string "{"
+                    , Parse.string "}"
+                    , Parse.string "["
+                    , Parse.string "]"
+                    ]
+                , whitespace
+                ]
+    in
+        parse input
+
+
+{-| Parse und verwirf Whitespace (greedy)
+-}
+whitespace : Parser a
+whitespace input =
+    let
+        parse =
+            Parse.map ( \ _ -> [] ) <| Parse.zeroOrMore <| Parse.oneOf
+                [ Parse.string "\u{0020}"   -- space
+                , Parse.string "\u{000D}"   -- carriage return
+                , Parse.string "\u{000A}"   -- line feed
+                , Parse.string "\u{0009}"   -- tab
+                ]
+    in
+        parse input

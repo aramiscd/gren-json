@@ -3,48 +3,13 @@ module Main exposing ( main )
 import FileSystem
 import Init
 import Node
-import Random
-import Task
-import TestRunner
+import Test.Runner.Effectful exposing ( run )
 import Tests exposing ( tests )
-import Time
 
 
-main : Node.Program {} {}
+main : Node.SimpleProgram a
 main =
-    Node.defineProgram
-        { init = init
-        , update = \ {} {} -> { model = {}, command = Cmd.none }
-        , subscriptions = \ {} -> Sub.none
-        }
-
-
-init : Node.Environment -> Init.Task { model : {}, command : Cmd {} }
-init environment =
-    Init.await FileSystem.initialize <| \ fileSystemPermission ->
-        Init.awaitTask Time.now <| \ now ->
-            Node.startProgram
-                { model = {}
-                , command = runTests
-                    { environment = environment
-                    , fileSystemPermission = fileSystemPermission
-                    , runs = 100
-                    , seed = Random.initialSeed ( Time.posixToMillis now )
-                    }
-                }
-
-
-runTests : Args -> Cmd {}
-runTests args =
-    tests args.fileSystemPermission
-    |> Task.andThen ( TestRunner.run args )
-    |> Task.andThen ( \ success -> if success then Task.succeed {} else Node.exitWithCode 1 )
-    |> Task.execute
-
-
-type alias Args =
-    { environment : Node.Environment
-    , fileSystemPermission : FileSystem.Permission
-    , runs : Int
-    , seed : Random.Seed
-    }
+    Node.defineSimpleProgram
+    <| \ env -> Init.await FileSystem.initialize
+    <| \ fsPermission -> run env
+    <| tests fsPermission

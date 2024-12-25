@@ -1,21 +1,21 @@
-{
-    "type": "application",
-    "platform": "node",
-    "source-directories": [
-        "src",
-        "../src"
-    ],
-    "gren-version": "0.4.5",
-    "dependencies": {
-        "direct": {
-            "aramiscd/gren-parse": "1.1.0",
-            "gren-lang/core": "5.1.1",
-            "gren-lang/node": "4.2.1",
-            "gren-lang/test": "3.0.0",
-            "gren-lang/test-runner-node": "4.0.1"
-        },
-        "indirect": {
-            "gren-lang/url": "4.0.0"
+{ "type" : "application"
+, "platform" : "node"
+, "source-directories" :
+    [ "src"
+    , "../src"
+    ]
+, "gren-version" : "0.5.3"
+, "dependencies" :
+    { "direct" :
+        { "aramiscd/gren-parse" : "1.3.2"
+        , "blaix/gren-effectful-tests-node" : "4.1.0"
+        , "gren-lang/core" : "6.0.1"
+        , "gren-lang/node" : "5.0.3"
+        , "gren-lang/test" : "4.1.0"
+        }
+    , "indirect" :
+        { "gren-lang/test-runner-node" : "6.0.0"
+        , "gren-lang/url" : "5.0.0"
         }
     }
 }

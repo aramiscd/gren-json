@@ -1,27 +1,25 @@
-module Json.Parse.String exposing ( string )
+module Json.Parse.String exposing ( jsonString, discard )
 
-import Json exposing ( Json )
-import Json.Parse.Number
-import Parse exposing ( Parser )
+import StringParser.Parse as Parse exposing ( Parser )
 
 
--- Parse einen JSON-String
---
-string : Parser Json
-string =
-    Parse.sequence [ Parse.string "\"", characters, Parse.string "\"" ]
-    |> Parse.map ( String.join "" >> Json.String >> Array.singleton )
+{-| Parse einen JSON-String
+-}
+jsonString : Parser String
+jsonString =
+    Parse.sequence [ discard "\"", characters, discard "\"" ]
+    |> Parse.map ( String.join "" >> Array.singleton )
 
 
--- Parse beliebig viele Zeichen
---
+{-| Parse beliebig viele Zeichen
+-}
 characters : Parser String
 characters =
     Parse.zeroOrMore character
 
 
--- Parse ein einzelnes Zeichen
---
+{-| Parse ein einzelnes Zeichen
+-}
 character : Parser String
 character =
     Parse.oneOf
@@ -30,11 +28,11 @@ character =
         ]
 
 
--- Parse ein einzelnes Zeichen (unescaped)
---
+{-| Parse ein einzelnes Zeichen (unescaped)
+-}
 unescapedCharacter : Parser String
 unescapedCharacter input =
-    case String.uncons input of
+    when String.popFirst input is
         Nothing -> Parse.fail input
         Just { first, rest } ->
             let
@@ -45,8 +43,8 @@ unescapedCharacter input =
                 else Parse.string ( String.fromChar first ) input
 
 
--- Parse ein Escape-Zeichen
---
+{-| Parse ein Escape-Zeichen
+-}
 escape : Parser String
 escape =
     Parse.oneOf
@@ -55,11 +53,32 @@ escape =
         ]
 
 
--- Parse einen hexadezimalen String
---
+{-| Parse einen hexadezimalen String
+-}
 hex : Parser String
 hex =
     Parse.oneOf
-        [ Json.Parse.Number.digit
+        [ digit
         , Parse.oneOf <| Array.map Parse.string <| String.split "" "ABCDEFabcdef"
         ]
+
+
+{-| Parse eine Ziffer
+-}
+digit : Parser String
+digit =
+    Parse.oneOf [ Parse.string "0", oneNine ]
+
+
+{-| Parse eine positive Ziffer
+-}
+oneNine : Parser String
+oneNine =
+    Parse.oneOf <| Array.map Parse.string <| String.split "" "123456789"
+
+
+{-| Parse einen String und verwirf das Ergebnis
+-}
+discard : String -> Parser a
+discard match input =
+    Parse.map ( \ _ -> [] ) ( Parse.string match ) input

@@ -1,8 +1,11 @@
 module Json exposing ( Json (..) )
 
-{-| JSON data type.
+{-| JSON data type
+
+---
 
 @docs Json
+
 -}
 
 {-| Data type for JSON values

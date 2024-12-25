@@ -1,14 +1,17 @@
 module Json.Pretty exposing ( print )
 
-{-| JSON Pretty-printer.
+{-| JSON Pretty-printer
+
+---
 
 @docs print
+
 -}
 
 import Json exposing ( Json )
 
 
-{-| Pretty-print a JSON value.
+{-| Pretty-print a JSON value
 
 The result is exclusively a function of the JSON syntax tree.
 The formatting of the input is irrelevant.
@@ -19,67 +22,66 @@ print value =
     printValue value |> String.join "\n"
 
 
--- Formatiere einen JSON-Wert als eine Liste von Strings
---
+{-| Formatiere einen JSON-Wert als eine Liste von Strings
+-}
 printValue : Json -> Array String
 printValue value =
-    case value of
+    when value is
         Json.Null -> [ "null" ]
         Json.False -> [ "false" ]
         Json.True -> [ "true" ]
         Json.Number number -> [ number ]
-        Json.String string -> [ string ]
+        Json.String string -> [ "\"" ++ string ++ "\"" ]
         Json.Array elements -> printArray elements
         Json.Object members -> printObject members
 
 
--- Formatiere ein JSON-Array als eine Liste von Strings
---
+{-| Formatiere ein JSON-Array als eine Liste von Strings
+-}
 printArray : Array Json -> Array String
 printArray array =
-    case Array.popFirst array of
+    when Array.popFirst array is
         Nothing -> [ "[]" ]
         Just { first, rest } ->
             printElement True first
-                ++ ( Array.flatMap ( printElement False ) rest )
+                ++ ( Array.mapAndFlatten ( printElement False ) rest )
                 ++ [ "]" ]
 
 
--- Formatiere ein JSON-Array-Element als eine Liste von Strings
---
+{-| Formatiere ein JSON-Array-Element als eine Liste von Strings
+-}
 printElement : Bool -> Json -> Array String
 printElement isFirst element =
     let
         prefix = if isFirst then "[ " else ", "
     in
-        case Array.popFirst ( printValue element ) of
+        when Array.popFirst ( printValue element ) is
             Nothing -> []
             Just { first, rest } -> [ prefix ++ first ] ++ Array.map ( \ x -> "  " ++ x ) rest
 
 
--- Formatiere ein JSON-Objekt als eine Liste von Strings
---
+{-| Formatiere ein JSON-Objekt als eine Liste von Strings
+-}
 printObject : Array { key : Json, value : Json } -> Array String
 printObject object =
-    case Array.popFirst object of
+    when Array.popFirst object is
         Nothing -> [ "{}" ]
         Just { first, rest } ->
             printMember True first
-                ++ ( Array.flatMap ( printMember False ) rest )
+                ++ ( Array.mapAndFlatten ( printMember False ) rest )
                 ++ [ "}" ]
 
 
--- Formatiere ein Schlüssel-Wert-Parr eines JSON-Objektes als eine
--- Liste von Strings
---
+{-| Formatiere ein Schlüssel-Wert-Parr eines JSON-Objektes als eine Liste von Strings
+-}
 printMember : Bool -> { key : Json, value : Json } -> Array String
 printMember isFirst { key, value } =
     let
         prefix = if isFirst then "{ " else ", "
     in
-        case Array.popFirst ( printValue key ) of
+        when Array.popFirst ( printValue key ) is
             Nothing -> []
             Just { first, rest } ->
-                case printValue value of
+                when printValue value is
                     [ line ] -> [ prefix ++ first ++ " : " ++ line ]
                     lines -> [ prefix ++ first ++ " :" ] ++ Array.map ( \ x -> "    " ++ x ) lines
