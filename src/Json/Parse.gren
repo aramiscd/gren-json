@@ -1,5 +1,7 @@
--- todo: überarbeiten
-module Json.Parse exposing ( run, json )
+module Json.Parse exposing
+    ( run
+    , json
+    )
 
 {-| JSON parser
 
@@ -24,153 +26,249 @@ module Json.Parse exposing ( run, json )
 -}
 
 import Json exposing ( Json )
-import Json.Parse.Number exposing ( jsonNumber )
-import Json.Parse.String exposing ( jsonString, discard )
-import Json.Parse.Tokenizer exposing ( Token, tokenize )
-import StringParser.Parse as Parse exposing ( Parser )
+import Json.Tokenizer as Tokenizer exposing ( Token, tokenize )
+import ArrayParser as Parse exposing ( Parser, Result )
+
+
+{-| Parse und verwirf optionalen Whitespace
+-}
+whitespace : Parser Token dst
+whitespace input =
+    when Array.popFirst input is
+        Just { first = Tokenizer.JsonWhitespace _, rest } ->
+            Just { backlog = rest, values = [] }
+        _ ->
+            Just { backlog = input, values = [] }
+
+
+{-| Parse und verwirf Tokens
+-}
+discard : Array src -> Parser src dst
+discard match input =
+    let
+        parse = Parse.array match |> Parse.map ( \ _ -> [] )
+    in
+        parse input
+
+
+{-| Parse ein Schlüssel-Wert-Paar eines JSON-Objektes
+-}
+member : Parser Token { key : Json, value : Json }
+member input =
+    when whitespace input is
+        Nothing -> Nothing
+        Just r1 -> when string r1.backlog is
+            Nothing -> Nothing
+            Just r2 -> when r2.values is
+                [ Json.String k ] -> when whitespace r2.backlog is
+                    Nothing -> Nothing
+                    Just r3 -> when discard [ Tokenizer.JsonDelimiter ":" ] r3.backlog is
+                        Nothing -> Nothing
+                        Just r4 -> when value r4.backlog is
+                            Nothing -> Nothing
+                            Just r5 -> when r5.values is
+                                [ v ] ->
+                                    Just
+                                        { backlog = r5.backlog
+                                        , values = [ { key = Json.String k, value = v } ]
+                                        }
+                                _ -> Nothing
+                _ -> Nothing
+
+
+nextMember : Array Token -> Maybe ( Result Token { key : Json, value : Json } )
+nextMember input =
+    when discard [ Tokenizer.JsonDelimiter "," ] input is
+        Nothing -> Nothing
+        Just r1 ->
+            when member r1.backlog is
+                Nothing -> Nothing
+                r2 -> r2
+
+
+moreMembers :
+    Result Token { key : Json, value : Json } ->
+    Maybe ( Result Token { key : Json, value : Json } )
+moreMembers acc =
+    when nextMember acc.backlog is
+        Nothing -> Just acc
+        Just r1 -> moreMembers { backlog = r1.backlog, values = acc.values ++ r1.values }
+
+
+{-| Parse die Schlüssel-Wert-Paare eines JSON-Objektes
+-}
+members : Parser Token { key : Json, value : Json }
+members input =
+    when member input is
+        Nothing ->
+            when whitespace input is
+                Nothing -> Nothing
+                r1 -> r1
+        Just r2 ->
+            moreMembers r2
+
+
+{-| Parse ein JSON-Objekt
+-}
+object : Parser Token Json
+object input =
+    when  discard [ Tokenizer.JsonDelimiter "{" ] input is
+        Nothing -> Nothing
+        Just r1 ->
+            when members r1.backlog is
+                Nothing -> Nothing
+                Just r2 ->
+                    when discard [ Tokenizer.JsonDelimiter "}" ] r2.backlog is
+                        Nothing -> Nothing
+                        Just r3 ->
+                            Just
+                                { backlog = r3.backlog
+                                , values = [ Json.Object r2.values ]
+                                }
+
+
+nextElement : Parser Token Json
+nextElement input =
+    when discard [ Tokenizer.JsonDelimiter "," ] input is
+        Nothing -> Nothing
+        Just r1 ->
+            when value r1.backlog is
+                Nothing -> Nothing
+                r2 -> r2
+
+
+moreElements : Result Token Json -> Maybe ( Result Token Json )
+moreElements acc =
+    when nextElement acc.backlog is
+        Nothing -> Just acc
+        Just r1 ->
+            moreElements
+                { backlog = r1.backlog
+                , values = acc.values ++ r1.values
+                }
+                                
+
+{-| Parse die Elemente eiens JSON-Array
+-}
+elements : Parser Token Json
+elements input =
+    when value input is
+        Just r2 -> moreElements r2
+        Nothing ->
+            when whitespace input is
+                Nothing -> Nothing
+                r1 -> r1
+
+
+{-| Parse ein JSON-Array
+-}
+array : Parser Token Json
+array input =
+    when discard [ Tokenizer.JsonDelimiter "[" ] input is
+        Nothing -> Nothing
+        Just parsedLeftBracket ->
+            when elements parsedLeftBracket.backlog is
+                Nothing -> Nothing
+                Just parsedElements ->
+                    when discard [ Tokenizer.JsonDelimiter "]" ] parsedElements.backlog is
+                        Nothing -> Nothing
+                        Just parsedRightBracket ->
+                            Just
+                                { backlog = parsedRightBracket.backlog
+                                , values = [ Json.Array parsedElements.values ]
+                                }
+
+
+{-| Parse einen JSON-String
+-}
+string : Parser Token Json
+string input =
+    when Array.popFirst input is
+        Just { first = Tokenizer.JsonAtom ( Json.String s ), rest } ->
+            Just
+                { backlog = rest
+                , values = [ Json.String s ]
+                }
+        _ ->
+            Nothing
+
+
+{-| Parse eine JSON-Zahl
+-}
+number : Parser Token Json
+number input =
+    when Array.popFirst input is
+        Just { first = Tokenizer.JsonAtom ( Json.Number x ), rest } ->
+            Just
+                { backlog = rest
+                , values = [ Json.Number x ]
+                }
+        _ ->
+            Nothing
+
+
+{-| Parse den JSON-Wert `false`
+-}
+false : Parser Token Json
+false input =
+    let
+        parse =
+            Parse.array [ Tokenizer.JsonAtom Json.False ]
+            |> Parse.map ( \ _ -> [ Json.False ] )
+    in
+        parse input
+
+                
+{-| Parse den JSON-Wert `true`
+-}
+true : Parser Token Json
+true input =
+    let
+        parse =
+            Parse.array [ Tokenizer.JsonAtom Json.True  ]
+            |> Parse.map ( \ _ -> [ Json.True  ] )
+    in
+        parse input
+
+
+{-| Parse den JSON-Wert `null`
+-}
+null : Parser Token Json
+null input =
+    let
+        parse =
+            Parse.array [ Tokenizer.JsonAtom Json.Null ]
+            |> Parse.map ( \ _ -> [ Json.Null  ] )
+    in
+        parse input
+
+
+{-| Parse einen JSON-Wert
+-}
+value : Parser Token Json
+value input =
+    when whitespace input is
+        Nothing -> Nothing
+        Just r1 ->
+            when Parse.oneOf [ object, array, string, number, false, true, null ] r1.backlog is
+                Nothing -> Nothing
+                Just r2 ->
+                    when whitespace r2.backlog is
+                        Nothing -> Nothing
+                        Just r3 -> Just { backlog = r3.backlog, values = r2.values }
+
+
+{-| Parse a JSON value into an intermediate result
+-}
+json : String -> Maybe ( Result Token Json )
+json input =
+    tokenize input |> Maybe.andThen value
 
 
 {-| Parse a JSON value
 -}
 run : String -> Maybe Json
 run input =
-    Parse.run json input
-
-
-{-| Parse a JSON value into an intermediate result
-
-This allows you to examine how far the parser gets for a specific input and what exactly it collects.
-I mainly expose this for my test code.
--}
-json : Parser Json
-json input =
-    let
-        parse = tokenize |> Parse.andThen element
-    in
-        parse input
-
-
--- Parse einen JSON-Wert
---
-value : Parser Json
-value input =
-    let
-        parse =
-            Parse.oneOf
-                [ -- jsonObject
---              , jsonArray
---              , jsonString |> Parse.map ( Array.map Json.String )
---              , jsonNumber |> Parse.map ( Array.map Json.Number )
---              , Parse.string "false" |> Parse.map ( \ _ -> [ Json.False ] )
---              , Parse.string "true"  |> Parse.map ( \ _ -> [ Json.True  ] )
---              , Parse.string "null"  |> Parse.map ( \ _ -> [ Json.Null  ] )
-                ]
-    in
-        parse input
-
-
--- -- Parse ein JSON-Objekt
--- --
--- jsonObject : Parser Json
--- jsonObject input =
---     let
---         parse =
---             Parse.map ( Array.singleton << Json.Object ) <| Parse.oneOf
---                 [ Parse.sequence [ discard "{", whitespace, discard "}" ]
---                 , Parse.sequence [ discard "{", members, discard "}" ]
---                 ]
---     in
---         parse input
-
-
--- -- Parse die Schlüssel-Wert-Paare eines JSON-Objektes
--- --
--- members : Parser { key : Json, value : Json }
--- members input =
---     let
---         parse =
---             Parse.sequence
---                 [ member
---                 , Parse.zeroOrMore <| Parse.sequence [ discard ",", member ]
---                 ]
---     in
---         parse input
-
-
--- -- Parse ein Schlüssel-Wert-Paar eines JSON-Objektes
--- --
--- member : Parser { key : Json, value : Json }
--- member input =
---     let
---         parse =
---             Parse.sequence
---                 [ whitespace
---                 , jsonString |> Parse.map ( Array.map Json.String )
---                 , whitespace
---                 , discard ":"
---                 , element
---                 ]
---             |> Parse.andThen
---                 ( \ result -> when result.values is
---                     [ Json.String k, v ] ->
---                         Just
---                             { backlog = result.backlog
---                             , values = [ { key = Json.String k, value = v } ]
---                             }
---                     _ ->
---                         Nothing
---                 )
---     in
---         parse input
-
-
--- -- Parse ein JSON-Array
--- --
--- jsonArray : Parser Json
--- jsonArray input =
---     let
---         parse =
---             Parse.map ( Array.singleton << Json.Array ) <| Parse.oneOf
---                 [ Parse.sequence [ discard "[", whitespace, discard "]" ]
---                 , Parse.sequence [ discard "[", elements, discard "]" ]
---                 ]
---     in
---         parse input
-
-
--- -- Parse die Elemente eines JSON-Array
--- --
--- elements : Parser Json
--- elements input =
---     let
---         parse =
---             Parse.sequence
---                 [ element
---                 , Parse.zeroOrMore <| Parse.sequence [ discard ",", element ]
---                 ]
---     in
---         parse input
-
-
--- Parse ein Element eines JSON-Array
---
--- element : Parse.Result Token -> Parse.Result Json
-element { backlog, values } =
-    Parse.fail "" -- todo
-    -- Parse.sequence [ whitespace, value, whitespace ] input
-
-
--- Parse und verwirf Whitespace (greedy)
---
-whitespace : Parser a
-whitespace input =
-    let
-        parse =
-            Parse.map ( \ _ -> [] ) <| Parse.zeroOrMore <| Parse.oneOf
-                [ Parse.string "\u{0020}"   -- space
-                , Parse.string "\u{000D}"   -- carriage return
-                , Parse.string "\u{000A}"   -- line feed
-                , Parse.string "\u{0009}"   -- tab
-                ]
-    in
-        parse input
+    when json input is
+        Just { backlog = [], values = [ jsonValue ] } -> Just jsonValue
+        _ -> Nothing

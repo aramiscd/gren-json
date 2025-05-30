@@ -1,0 +1,104 @@
+module Json.Tokenizer exposing ( Token (..), tokenize )
+
+import Json exposing ( Json )
+import Json.Parse.Number exposing ( jsonNumber )
+import Json.Parse.String exposing ( jsonString )
+import StringParser as Parse exposing ( Parser, Result )
+
+
+type Token
+    = JsonAtom Json
+    | JsonDelimiter String
+    | JsonWhitespace String
+
+
+{-| Parse einen atomaren JSON-Wert
+-}
+jsonAtom : Parser Token
+jsonAtom input =
+    let
+        parse =
+            Parse.oneOf
+                [ Parse.map ( Array.map Json.String ) jsonString
+                , Parse.map ( Array.map Json.Number ) jsonNumber
+                , Parse.map ( \ _ -> [ Json.False ] ) ( Parse.string "false" )
+                , Parse.map ( \ _ -> [ Json.True  ] ) ( Parse.string "true" )
+                , Parse.map ( \ _ -> [ Json.Null  ] ) ( Parse.string "null" )
+                ]
+            |> Parse.map ( Array.map JsonAtom )
+    in
+        parse input
+
+
+{-| Parse ein Begrenzungszeichen
+-}
+jsonDelimiter : Parser Token
+jsonDelimiter input =
+    let
+        parse =
+            Parse.oneOf
+                [ Parse.string ","
+                , Parse.string ":"
+                , Parse.string "{"
+                , Parse.string "}"
+                , Parse.string "["
+                , Parse.string "]"
+                ]
+            |> Parse.map ( Array.map JsonDelimiter )
+    in
+        parse input
+
+
+{-| Parse Whitespace (greedy)
+-}
+jsonWhitespace : Parser Token
+jsonWhitespace input =
+    when jsonWhitespaceHelper { backlog = input, values = [] } is
+        { values = [] } -> Nothing 
+        result ->
+            Just
+                { backlog = result.backlog
+                , values = Array.singleton ( JsonWhitespace ( String.join "" result.values ) )
+                }
+
+
+jsonWhitespaceHelper : Result String -> Result String
+jsonWhitespaceHelper acc =
+    let
+        parse =
+            Parse.oneOf
+                [ Parse.string "\u{0020}"   -- space
+                , Parse.string "\u{000D}"   -- carriage return
+                , Parse.string "\u{000A}"   -- line feed
+                , Parse.string "\u{0009}"   -- tab
+                ]
+    in
+        when parse acc.backlog is
+            Nothing -> acc
+            Just result -> jsonWhitespaceHelper { backlog = result.backlog, values = acc.values ++ result.values }
+
+
+{-| Parse ein Token
+-}
+parseToken : Parser Token
+parseToken input =
+    Parse.oneOf [ jsonAtom, jsonDelimiter, jsonWhitespace ] input
+
+
+{-| Zerlege die Eingabe in eine Folge von atomaren JSON-Werten und Trennzeichen
+-}
+tokenize : String -> Maybe ( Array Token )
+tokenize input =
+    Parse.run parseTokens input
+
+
+parseTokens : Parser ( Array Token )
+parseTokens x =
+    parsetokensHelper { backlog = x, values = [] }
+    |> \ result -> Just { backlog = result.backlog, values = [ result.values ] }
+
+
+parsetokensHelper acc =
+    when parseToken acc.backlog is
+        Just result -> parsetokensHelper { backlog = result.backlog, values = acc.values ++ result.values }
+        Nothing -> acc

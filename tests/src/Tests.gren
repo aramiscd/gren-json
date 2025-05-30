@@ -13,66 +13,312 @@ tests : FileSystem.Permission -> Test
 tests fsPermission =
     Test.concat
         ---------------------------------------------------------------------------------------
-        [ Test.fuzz Fuzz.whitespace "json empty document"
-            <| \ ws -> Expect.equal ( json ws )
-            <| Nothing
+        [ Test.fuzz Fuzz.whitespace "json empty document" <| \ ws ->
+            let
+                actual = json ws
+                expected = Nothing
+            in
+                Expect.equal expected actual
         ---------------------------------------------------------------------------------------
-        , Test.fuzz2 Fuzz.whitespace Fuzz.whitespace "json null"
-            <| \ wsl wsr -> Expect.equal ( json ( wsl ++ "null" ++ wsr ) )
-            <| Just { backlog = "", values = [ Json.Null ] }
+        , Test.fuzz2 Fuzz.whitespace Fuzz.whitespace "json null" <| \ wsl wsr ->
+            let
+                actual = json ( wsl ++ "null" ++ wsr )
+                expected = Just { backlog = [], values = [ Json.Null ] }
+            in
+                Expect.equal expected actual
         ---------------------------------------------------------------------------------------
-        , Test.fuzz2 Fuzz.whitespace Fuzz.whitespace "json false"
-            <| \ wsl wsr -> Expect.equal ( json ( wsl ++ "false" ++ wsr ) )
-            <| Just { backlog = "", values = [ Json.False ] }
+        , Test.fuzz2 Fuzz.whitespace Fuzz.whitespace "json false" <| \ wsl wsr ->
+            let
+                actual = json ( wsl ++ "false" ++ wsr )
+                expected = Just { backlog = [], values = [ Json.False ] }
+            in
+                Expect.equal expected actual
         ---------------------------------------------------------------------------------------
-        , Test.fuzz2 Fuzz.whitespace Fuzz.whitespace "json true"
-            <| \ wsl wsr ->  Expect.equal ( json ( wsl ++ "true" ++ wsr ) )
-            <| Just { backlog = "", values = [ Json.True ] }
+        , Test.fuzz2 Fuzz.whitespace Fuzz.whitespace "json true" <| \ wsl wsr ->
+            let
+                actual = json ( wsl ++ "true" ++ wsr )
+                expected = Just { backlog = [], values = [ Json.True ] }
+            in
+                Expect.equal expected actual
         ---------------------------------------------------------------------------------------
-        , Test.fuzz3 Fuzz.whitespace Fuzz.number Fuzz.whitespace "json number"
-            <| \ wsl n wsr -> Expect.equal ( json ( wsl ++ n ++ wsr ) )
-            <| Just { backlog = "", values = [ Json.Number n ] }
+        , Test.fuzz3 Fuzz.whitespace Fuzz.number Fuzz.whitespace "json number" <| \ wsl n wsr ->
+            let
+                actual = json ( wsl ++ n ++ wsr )
+                expected = Just { backlog = [], values = [ Json.Number n ] }
+            in
+                Expect.equal expected actual
         ---------------------------------------------------------------------------------------
-        , Test.fuzz3 Fuzz.whitespace Fuzz.chars Fuzz.whitespace "json string"
-            <| \ wsl cs wsr -> Expect.equal ( json ( wsl ++ "\"" ++ cs ++ "\"" ++ wsr ) )
-            <| Just { backlog = "", values = [ Json.String cs ] }
+        , Test.fuzz3 Fuzz.whitespace Fuzz.chars Fuzz.whitespace "json string" <| \ wsl cs wsr ->
+            let
+                actual = json ( wsl ++ "\"" ++ cs ++ "\"" ++ wsr )
+                expected = Just { backlog = [], values = [ Json.String cs ] }
+            in
+                Expect.equal expected actual
         ---------------------------------------------------------------------------------------
-        , test "json array []"
-            <| \ _ -> Expect.equal ( json "[]" )
-            <| Just { backlog = "", values = [ Json.Array [] ] }
+        , test "json array []" <| \ _ ->
+            let
+                actual = json "[]"
+                expected = Just { backlog = [], values = [ Json.Array [] ] }
+            in
+                Expect.equal expected actual
         ---------------------------------------------------------------------------------------
-           , test "json array [1,2,3]"
-                <| \ _ -> Expect.equal ( json "[1,2,3]" )
-                <| Just
-                    { backlog = ""
-                    , values =
-                        [ Json.Array [ Json.Number "1", Json.Number "2", Json.Number "3" ]
-                        ]
-                    }
+        , test "json array [     ]" <| \ _ ->
+            let
+                actual = json "[     ]"
+                expected = Just { backlog = [], values = [ Json.Array [] ] }
+            in
+                Expect.equal expected actual
         ---------------------------------------------------------------------------------------
-        , test "json object {}"
-            <| \ _ -> Expect.equal ( json "{}" )
-            <| Just { backlog = "", values = [ Json.Object [] ] }
+        , test "json array [1,2,3]" <| \ _ ->
+            let
+                actual = json "[1,2,3]"
+                expected =
+                    Just
+                        { backlog = []
+                        , values = [ Json.Array [ Json.Number "1", Json.Number "2", Json.Number "3" ] ]
+                        }
+            in
+                Expect.equal expected actual
         ---------------------------------------------------------------------------------------
-        , test "json object {\"a\":1,\"b\":2,\"c\":3}"
-            <| \ _ -> Expect.equal ( json "{\"a\":1,\"b\":2,\"c\":3}" )
-            <| Just
-                { backlog = ""
-                , values =
-                    [ Json.Object
-                        [ { key = Json.String "a", value = Json.Number "1" }
-                        , { key = Json.String "b", value = Json.Number "2" }
-                        , { key = Json.String "c", value = Json.Number "3" }
-                        ]
-                    ]
-                }
+        , test "nested json array [[]]" <| \ _ ->
+            let
+                actual = json "[[]]"
+                expected = Just { backlog = [], values = [ Json.Array [ Json.Array [] ] ] }
+            in
+                Expect.equal expected actual
+        ---------------------------------------------------------------------------------------
+        , test "nested json array [[[]]]" <| \ _ ->
+            let
+                actual = json "[[[]]]"
+                expected = Just { backlog = [], values = [ Json.Array [ Json.Array [ Json.Array [] ] ] ] }
+            in
+                Expect.equal expected actual
+        ---------------------------------------------------------------------------------------
+        , test "json object {}" <| \ _ ->
+            let
+                actual = json "{}"
+                expected = Just { backlog = [], values = [ Json.Object [] ] }
+            in
+                Expect.equal expected actual
+        ---------------------------------------------------------------------------------------
+        , test "json object {     }" <| \ _ ->
+            let
+                actual = json "{     }"
+                expected = Just { backlog = [], values = [ Json.Object [] ] }
+            in
+                Expect.equal expected actual
+        ---------------------------------------------------------------------------------------
+        , test "json object {\"a\":1,\"b\":2,\"c\":3}" <| \ _ ->
+            let
+                actual = json "{\"a\":1,\"b\":2,\"c\":3}"
+                expected =
+                    Just
+                        { backlog = []
+                        , values =
+                            [ Json.Object
+                                [ { key = Json.String "a", value = Json.Number "1" }
+                                , { key = Json.String "b", value = Json.Number "2" }
+                                , { key = Json.String "c", value = Json.Number "3" }
+                                ]
+                            ]
+                        }
+            in
+                Expect.equal expected actual
+        ---------------------------------------------------------------------------------------
+        , test "nested json object {\"a\":{}}" <| \ _ ->
+            let
+                actual = json "{\"a\":{}}"
+                expected =
+                    Just
+                        { backlog = []
+                        , values = [ Json.Object [ { key = Json.String "a", value = Json.Object [] } ] ]
+                        }
+            in
+                Expect.equal expected actual
+        ---------------------------------------------------------------------------------------
+        , test "nested json object {\"a\":{\"b\":{}}}" <| \ _ ->
+            let
+                actual = json "{\"a\":{\"b\":{}}}"
+                expected =
+                    Just
+                        { backlog = []
+                        , values =
+                            [ Json.Object
+                                [ { key = Json.String "a"
+                                  , value = Json.Object [ { key = Json.String "b", value = Json.Object [] } ]
+                                  }
+                                ]
+                            ]
+                        }
+            in
+                Expect.equal expected actual
         ---------------------------------------------------------------------------------------
         , testFile
             { expectation = TestFile.Pass
             , fsPermission = fsPermission
-            , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/64KB.json"
+            , path = "json-test-data/GBP.json"
             }
         ---------------------------------------------------------------------------------------
-        -- todo: es gibt noch mehr zu testende json dateien
+        , testFile
+            { expectation = TestFile.Pass
+            , fsPermission = fsPermission
+            , path = "json-test-data/USD.json"
+            }
+        ---------------------------------------------------------------------------------------
+        , testFile
+            { expectation = TestFile.Pass
+            , fsPermission = fsPermission
+            , path = "json-test-data/enforcement.json"
+            }
+        ---------------------------------------------------------------------------------------
+        , testFile
+            { expectation = TestFile.Pass
+            , fsPermission = fsPermission
+            , path = "json-test-data/forces.json"
+            }
+        ---------------------------------------------------------------------------------------
+        , testFile
+            { expectation = TestFile.Pass
+            , fsPermission = fsPermission
+            , path = "json-test-data/neighbourhoods.json"
+            }
+        ---------------------------------------------------------------------------------------
+        , testFile
+            { expectation = TestFile.Pass
+            , fsPermission = fsPermission
+            , path = "json-test-data/steam1.json"
+            }
+        ---------------------------------------------------------------------------------------
+--      , testFile -- langsam
+--          { expectation = TestFile.Pass
+--          , fsPermission = fsPermission
+--          , path = "json-test-data/crimes-street-dates.json"
+--          }
+        ---------------------------------------------------------------------------------------
+--      , testFile -- langsam
+--          { expectation = TestFile.Fail
+--          , fsPermission = fsPermission
+--          , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/unterminated.json"
+--          }
+        ---------------------------------------------------------------------------------------
+--      , testFile -- langsam
+--          { expectation = TestFile.Pass
+--          , fsPermission = fsPermission
+--          , path = "json-test-data/pokemon2.json"
+--          }
+        ---------------------------------------------------------------------------------------
+--      , testFile -- langsam
+--          { expectation = TestFile.Pass
+--          , fsPermission = fsPermission
+--          , path = "json-test-data/bitcoin-latestblock.json"
+--          }
+        ---------------------------------------------------------------------------------------
+--      , testFile -- langsam
+--          { expectation = TestFile.Pass
+--          , fsPermission = fsPermission
+--          , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/64KB-min.json"
+--          }
+        ---------------------------------------------------------------------------------------
+--      , testFile -- langsam
+--          { expectation = TestFile.Fail
+--          , fsPermission = fsPermission
+--          , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/missing-colon.json"
+--          }
+        ---------------------------------------------------------------------------------------
+--      , testFile -- langsam
+--          { expectation = TestFile.Pass
+--          , fsPermission = fsPermission
+--          , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/64KB.json"
+--          }
+        ---------------------------------------------------------------------------------------
+--      , testFile -- langsam
+--          { expectation = TestFile.Pass
+--          , fsPermission = fsPermission
+--          , path = "json-test-data/pokedex.json"
+--          }
+        ---------------------------------------------------------------------------------------
+        , testFile
+            { expectation = TestFile.Fail
+            , fsPermission = fsPermission
+            , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/binary-data.json"
+            }
+        ---------------------------------------------------------------------------------------
+--      , testFile -- langsam
+--          { expectation = TestFile.Pass
+--          , fsPermission = fsPermission
+--          , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/128KB-min.json"
+--          }
+        ---------------------------------------------------------------------------------------
+--      , testFile -- langsam
+--          { expectation = TestFile.Pass
+--          , fsPermission = fsPermission
+--          , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/256KB-min.json"
+--          }
+        ---------------------------------------------------------------------------------------
+--      , testFile -- langsam
+--          { expectation = TestFile.Pass
+--          , fsPermission = fsPermission
+--          , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/128KB.json"
+--          }
+        ---------------------------------------------------------------------------------------
+--      , testFile -- langsam
+--          { expectation = TestFile.Pass
+--          , fsPermission = fsPermission
+--          , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/256KB.json"
+--          }
+        ---------------------------------------------------------------------------------------
+--      , testFile -- langsam
+--          { expectation = TestFile.Pass
+--          , fsPermission = fsPermission
+--          , path = "json-test-data/pokemon1.json"
+--          }
+        ---------------------------------------------------------------------------------------
+--      , testFile -- langsam
+--          { expectation = TestFile.Pass
+--          , fsPermission = fsPermission
+--          , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/512KB-min.json"
+--          }
+        ---------------------------------------------------------------------------------------
+--      , testFile -- langsam
+--          { expectation = TestFile.Pass
+--          , fsPermission = fsPermission
+--          , path = "json-test-data/bitcoin-unconfirmed-transactions.json"
+--          }
+        ---------------------------------------------------------------------------------------
+--      , testFile -- langsam
+--          { expectation = TestFile.Pass
+--          , fsPermission = fsPermission
+--          , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/512KB.json"
+--          }
+        ---------------------------------------------------------------------------------------
+--      , testFile -- langsam
+--          { expectation = TestFile.Pass
+--          , fsPermission = fsPermission
+--          , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/1MB-min.json"
+--          }
+        ---------------------------------------------------------------------------------------
+--      , testFile -- langsam
+--          { expectation = TestFile.Pass
+--          , fsPermission = fsPermission
+--          , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/1MB.json"
+--          }
+        ---------------------------------------------------------------------------------------
+--      , testFile -- langsam
+--          { expectation = TestFile.Pass
+--          , fsPermission = fsPermission
+--          , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/5MB-min.json"
+--          }
+        ---------------------------------------------------------------------------------------
+--      , testFile -- langsam
+--          { expectation = TestFile.Pass
+--          , fsPermission = fsPermission
+--          , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/5MB.json"
+--          }
+        ---------------------------------------------------------------------------------------
+--      , testFile -- langsam
+--          { expectation = TestFile.Fail
+--          , fsPermission = fsPermission
+--          , path = "json-test-data/raw.githubusercontent.com/json-iterator/test-data/refs/heads/master/large-file.json"
+--          }
         ---------------------------------------------------------------------------------------
         ]

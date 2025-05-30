@@ -26,6 +26,8 @@ type Expectation = Fail | Pass
 testFile: Args -> Test
 testFile args =
     let
+        _ = Debug.log "TestFile" args.path
+        
         fsPath = FileSystem.Path.fromPosixString args.path
 
         description = when args.expectation is

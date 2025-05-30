@@ -1,80 +1,6 @@
-module Json.Parse.String exposing ( jsonString, discard )
+module Json.Parse.String exposing ( jsonString )
 
-import StringParser.Parse as Parse exposing ( Parser )
-
-
-{-| Parse einen JSON-String
--}
-jsonString : Parser String
-jsonString =
-    Parse.sequence [ discard "\"", characters, discard "\"" ]
-    |> Parse.map ( String.join "" >> Array.singleton )
-
-
-{-| Parse beliebig viele Zeichen
--}
-characters : Parser String
-characters =
-    Parse.zeroOrMore character
-
-
-{-| Parse ein einzelnes Zeichen
--}
-character : Parser String
-character =
-    Parse.oneOf
-        [ unescapedCharacter
-        , Parse.sequence [ Parse.string "\\", escape ]
-        ]
-
-
-{-| Parse ein einzelnes Zeichen (unescaped)
--}
-unescapedCharacter : Parser String
-unescapedCharacter input =
-    when String.popFirst input is
-        Nothing -> Parse.fail input
-        Just { first, rest } ->
-            let
-                c = Char.toCode first
-            in
-                if c < 32 || c == 34 || c == 92 || c > 1114111
-                then Parse.fail input
-                else Parse.string ( String.fromChar first ) input
-
-
-{-| Parse ein Escape-Zeichen
--}
-escape : Parser String
-escape =
-    Parse.oneOf
-        [ Parse.oneOf <| Array.map Parse.string <| String.split "" "\"\\/bfnrt"
-        , Parse.sequence [ Parse.string "u", hex, hex, hex, hex ]
-        ]
-
-
-{-| Parse einen hexadezimalen String
--}
-hex : Parser String
-hex =
-    Parse.oneOf
-        [ digit
-        , Parse.oneOf <| Array.map Parse.string <| String.split "" "ABCDEFabcdef"
-        ]
-
-
-{-| Parse eine Ziffer
--}
-digit : Parser String
-digit =
-    Parse.oneOf [ Parse.string "0", oneNine ]
-
-
-{-| Parse eine positive Ziffer
--}
-oneNine : Parser String
-oneNine =
-    Parse.oneOf <| Array.map Parse.string <| String.split "" "123456789"
+import StringParser as Parse exposing ( Parser )
 
 
 {-| Parse einen String und verwirf das Ergebnis
@@ -82,3 +8,122 @@ oneNine =
 discard : String -> Parser a
 discard match input =
     Parse.map ( \ _ -> [] ) ( Parse.string match ) input
+
+
+{-| Parse ein einzelnes Zeichen (unescaped)
+-}
+unescapedCharacter : Parser String
+unescapedCharacter input =
+    let
+        parse =
+            when String.popFirst input is
+                Nothing -> Parse.fail
+                Just { first, rest } ->
+                    let
+                        c = Char.toCode first
+                    in
+                        if c < 32 || c == 34 || c == 92 || c > 1114111
+                        then Parse.fail
+                        else Parse.string ( String.fromChar first )
+    in
+        parse input
+
+
+{-| Parse eine positive Ziffer
+-}
+oneNine : Parser String
+oneNine input =
+    Parse.oneOf
+        [ Parse.string "1"
+        , Parse.string "2"
+        , Parse.string "3"
+        , Parse.string "4"
+        , Parse.string "5"
+        , Parse.string "6"
+        , Parse.string "7"
+        , Parse.string "8"
+        , Parse.string "9"
+        ]
+        input
+
+
+{-| Parse eine Ziffer
+-}
+digit : Parser String
+digit input =
+    Parse.oneOf [ Parse.string "0", oneNine ] input
+
+
+{-| Parse einen hexadezimalen String
+-}
+hex : Parser String
+hex input =
+    Parse.oneOf
+        [ digit
+        , Parse.string "A"
+        , Parse.string "B"
+        , Parse.string "C"
+        , Parse.string "D"
+        , Parse.string "E"
+        , Parse.string "F"
+        , Parse.string "a"
+        , Parse.string "b"
+        , Parse.string "c"
+        , Parse.string "d"
+        , Parse.string "e"
+        , Parse.string "f"
+        ]
+        input
+
+
+{-| Parse ein Escape-Zeichen
+-}
+escape : Parser String
+escape input =
+    Parse.oneOf
+        [ Parse.oneOf
+            [ Parse.string "\""
+            , Parse.string "\\"
+            , Parse.string "/"
+            , Parse.string "b"
+            , Parse.string "f"
+            , Parse.string "n"
+            , Parse.string "r"
+            , Parse.string "t"
+            ]
+        , Parse.sequence [ Parse.string "u", hex, hex, hex, hex ]
+        ]
+        input
+
+
+{-| Parse ein einzelnes Zeichen
+-}
+character : Parser String
+character input =
+    Parse.oneOf
+        [ unescapedCharacter
+        , Parse.sequence [ Parse.string "\\", escape ]
+        ]
+        input
+
+
+{-| Parse beliebig viele Zeichen
+-}
+characters : Parser String
+characters input =
+    let
+        parse = Parse.zeroOrMore character
+    in
+        parse input
+
+
+{-| Parse einen JSON-String
+-}
+jsonString : Parser String
+jsonString input =
+    let
+        parse =
+            Parse.sequence [ discard "\"", characters, discard "\"" ]
+            |> Parse.map ( String.join "" >> Array.singleton )
+    in
+        parse input

@@ -1,76 +1,92 @@
 module Json.Parse.Number exposing ( jsonNumber )
 
-import StringParser.Parse as Parse exposing ( Parser )
-
-
-{-| Parse eine JSON-Zahl
-
-JSON-Zahlen sind entweder Ganze Zahlen oder Gleitkommazahlen, mit oder ohne wissenschftliches Exponentialsuffix.
-Nur die Dezimaldarstellung ist zulässig, keine Hexademizalzahlen, keine Oktalzahlen.
--}
-jsonNumber : Parser String
-jsonNumber =
-    Parse.sequence [ integer, fraction, exponent ]
-    |> Parse.map ( String.join "" >> Array.singleton )
+import StringParser as Parse exposing ( Parser, Result )
 
 
 {-| Parse eine Ganze Zahl
-
 Nur Dezimalnotation, keine führenden Nullen, mit oder ohne führendes Minus
 -}
 integer : Parser String
-integer =
-    Parse.oneOf
-        [ Parse.sequence [ oneNine, digits ]
-        , digit
-        , Parse.sequence [ Parse.string "-", oneNine, digits ]
-        , Parse.sequence [ Parse.string "-", digit ]
-        ]
-
-
-{-| Parse so viele Ziffern wie möglich aber mindestens eine
--}
-digits : Parser String
-digits =
-    Parse.oneOrMore digit
-
-
-{-| Parse eine Ziffer
--}
-digit : Parser String
-digit =
-    Parse.oneOf [ Parse.string "0", oneNine ]
-
-
-{-| Parse eine positive Ziffer
--}
-oneNine : Parser String
-oneNine =
-    Parse.oneOf <| Array.map Parse.string <| String.split "" "123456789"
+integer input =
+    let
+        parse =
+            Parse.oneOf
+                [ Parse.sequence [ oneNine, digits ]
+                , digit
+                , Parse.sequence [ Parse.string "-", oneNine, digits ]
+                , Parse.sequence [ Parse.string "-", digit ]
+                ]
+    in
+        parse input
 
 
 {-| Parse den gebrochenen Teil einer Gleitkommazahl
 -}
 fraction : Parser String
-fraction =
-    Parse.optional <| Parse.sequence [ Parse.string ".", digits ]
+fraction input =
+    when Parse.sequence [ Parse.string ".", digits ] input is
+        Nothing -> Just { backlog = input, values = [] }
+        result -> result
+
+
+
+{-| Parse ein Signum
+Achtung: Das wird in der wissenschaftlichen Notation verwendet.
+Herkömmlich notierte Zahlen haben eine andere Syntax in JSON!
+-}
+sign : Parser String
+sign input =
+    when Parse.oneOf [ Parse.string "+", Parse.string "-" ] input is
+        Nothing -> Just { backlog = input, values = [] }
+        result -> result
+
+
+{-| Parse eine positive Ziffer
+-}
+oneNine : Parser String
+oneNine input =
+    Parse.oneOf ( Array.map Parse.string ( String.split "" "123456789" ) ) input
+
+
+{-| Parse eine Ziffer
+-}
+digit : Parser String
+digit input =
+    Parse.oneOf [ Parse.string "0", oneNine ] input
+
+
+{-| Parse so viele Ziffern wie möglich aber mindestens eine
+-}
+digits : Parser String
+digits input =
+    when digit input is
+        Nothing -> Nothing
+        Just result -> Just ( Parse.accumulate digit result )
 
 
 {-| Parse das Exponentialsuffix der wissenschaftlichen Zahlennotation
 -}
 exponent : Parser String
-exponent =
-    Parse.optional <| Parse.oneOf
-        [ Parse.sequence [ Parse.string "E", sign, digits ]
-        , Parse.sequence [ Parse.string "e", sign, digits ]
-        ]
+exponent input =
+    let
+        result =
+            Parse.oneOf
+                [ Parse.sequence [ Parse.string "E", sign, digits ]
+                , Parse.sequence [ Parse.string "e", sign, digits ]
+                ]
+                input
+    in
+        when result is
+            Nothing -> Just { backlog = input, values = [] }
+            _ -> result
 
 
-{-| Parse ein Signum
-
-Achtung: Das wird in der wissenschaftlichen Notation verwendet.
-Herkömmlich notierte Zahlen haben eine andere Syntax in JSON!
+{-| Parse eine JSON-Zahl
+JSON-Zahlen sind entweder Ganze Zahlen oder Gleitkommazahlen, mit oder ohne wissenschftliches Exponentialsuffix.
+Nur die Dezimaldarstellung ist zulässig, keine Hexademizalzahlen, keine Oktalzahlen.
 -}
-sign : Parser String
-sign =
-    Parse.optional <| Parse.oneOf [ Parse.string "+", Parse.string "-" ]
+jsonNumber : Parser String
+jsonNumber input =
+    when Parse.sequence [ integer, fraction, exponent ] input is
+        Nothing -> Nothing
+        Just result -> Just { backlog = result.backlog, values = [ String.join "" result.values ] }

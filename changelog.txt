@@ -1,0 +1,13 @@
+2.0.0 (2025-08-13)
+
+Bisher ist der JSON-Parser schon an kleinen Eingaben gescheitert,
+weil ungünstige Rekursionen den Call Stack schnell gefüllt haben.
+Ich konnte das beheben, indem ich die Aufrufe bestimmer Kombinatoren durch
+handgeschriebene, endrekursive Parser-Funktionen ersetzt habe, die der
+Compiler radikal optimieren kann.  Die Kombinatoren in aramiscd/gren-parse
+selbst sind mittlerweile auch sorgfältig endrekursiv geschrieben, aber ob
+das schon genügt, um wieder ohne Leistungseinbußen auf die Kombinatoren
+zu setzen, habe ich noch nicht überprüft.  Jedenfalls scheint der
+Parser jetzt keine Probleme mehr damit zu haben, erfolgreich größere
+Dateien zu verarbeiten.  Er ist immer noch sehr langsam.  Das werde ich
+als nächstes angehen.

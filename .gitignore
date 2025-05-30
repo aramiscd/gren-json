@@ -1,2 +1,4 @@
 .gren
+gren_packages
 node_modules
+tests/run-tests
