@@ -279,46 +279,53 @@ tests fsPermission =
 --          , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/512KB-min.json"
 --          }
         ---------------------------------------------------------------------------------------
---      , testFile -- langsam
---          { expectation = TestFile.Pass
---          , fsPermission = fsPermission
---          , path = "json-test-data/bitcoin-unconfirmed-transactions.json"
---          }
-        ---------------------------------------------------------------------------------------
---      , testFile -- langsam
---          { expectation = TestFile.Pass
---          , fsPermission = fsPermission
---          , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/512KB.json"
---          }
-        ---------------------------------------------------------------------------------------
---      , testFile -- langsam
---          { expectation = TestFile.Pass
---          , fsPermission = fsPermission
---          , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/1MB-min.json"
---          }
-        ---------------------------------------------------------------------------------------
---      , testFile -- langsam
---          { expectation = TestFile.Pass
---          , fsPermission = fsPermission
---          , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/1MB.json"
---          }
-        ---------------------------------------------------------------------------------------
---      , testFile -- langsam
---          { expectation = TestFile.Pass
---          , fsPermission = fsPermission
---          , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/5MB-min.json"
---          }
-        ---------------------------------------------------------------------------------------
---      , testFile -- langsam
---          { expectation = TestFile.Pass
---          , fsPermission = fsPermission
---          , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/5MB.json"
---          }
-        ---------------------------------------------------------------------------------------
---      , testFile -- langsam
---          { expectation = TestFile.Fail
---          , fsPermission = fsPermission
---          , path = "json-test-data/raw.githubusercontent.com/json-iterator/test-data/refs/heads/master/large-file.json"
---          }
-        ---------------------------------------------------------------------------------------
         ]
+
+
+-- Probleme
+
+    -- scheitert
+
+        --  , testFile -- langsam
+        --      { expectation = TestFile.Pass
+        --      , fsPermission = fsPermission
+        --      , path = "json-test-data/bitcoin-unconfirmed-transactions.json"
+        --      }
+
+    -- zu langsam
+
+        --  , testFile -- langsam
+        --      { expectation = TestFile.Pass
+        --      , fsPermission = fsPermission
+        --      , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/512KB.json"
+        --      }
+
+        --  , testFile -- langsam
+        --      { expectation = TestFile.Pass
+        --      , fsPermission = fsPermission
+        --      , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/1MB-min.json"
+        --      }
+
+        --  , testFile -- langsam
+        --      { expectation = TestFile.Pass
+        --      , fsPermission = fsPermission
+        --      , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/1MB.json"
+        --      }
+
+        --  , testFile -- langsam
+        --      { expectation = TestFile.Pass
+        --      , fsPermission = fsPermission
+        --      , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/5MB-min.json"
+        --      }
+
+        --  , testFile -- langsam
+        --      { expectation = TestFile.Pass
+        --      , fsPermission = fsPermission
+        --      , path = "json-test-data/microsoftedge.github.io/Demos/json-dummy-data/5MB.json"
+        --      }
+
+        --  , testFile -- langsam
+        --      { expectation = TestFile.Fail
+        --      , fsPermission = fsPermission
+        --      , path = "json-test-data/raw.githubusercontent.com/json-iterator/test-data/refs/heads/master/large-file.json"
+        --      }
