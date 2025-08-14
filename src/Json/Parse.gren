@@ -27,7 +27,7 @@ module Json.Parse exposing
 
 import Json exposing ( Json )
 import Json.Tokenizer as Tokenizer exposing ( Token, tokenize )
-import ArrayParser as Parse exposing ( Parser, Result )
+import TokenParser as Parse exposing ( Parser, Result )
 
 
 {-| Parse und verwirf optionalen Whitespace
@@ -46,7 +46,7 @@ whitespace input =
 discard : Array src -> Parser src dst
 discard match input =
     let
-        parse = Parse.array match |> Parse.map ( \ _ -> [] )
+        parse = Parse.values match |> Parse.map ( \ _ -> [] )
     in
         parse input
 
@@ -213,7 +213,7 @@ false : Parser Token Json
 false input =
     let
         parse =
-            Parse.array [ Tokenizer.JsonAtom Json.False ]
+            Parse.values [ Tokenizer.JsonAtom Json.False ]
             |> Parse.map ( \ _ -> [ Json.False ] )
     in
         parse input
@@ -225,7 +225,7 @@ true : Parser Token Json
 true input =
     let
         parse =
-            Parse.array [ Tokenizer.JsonAtom Json.True  ]
+            Parse.values [ Tokenizer.JsonAtom Json.True  ]
             |> Parse.map ( \ _ -> [ Json.True  ] )
     in
         parse input
@@ -237,7 +237,7 @@ null : Parser Token Json
 null input =
     let
         parse =
-            Parse.array [ Tokenizer.JsonAtom Json.Null ]
+            Parse.values [ Tokenizer.JsonAtom Json.Null ]
             |> Parse.map ( \ _ -> [ Json.Null  ] )
     in
         parse input

@@ -3,7 +3,7 @@ module Json.Tokenizer exposing ( Token (..), tokenize )
 import Json exposing ( Json )
 import Json.Parse.Number exposing ( jsonNumber )
 import Json.Parse.String exposing ( jsonString )
-import StringParser as Parse exposing ( Parser, Result )
+import SimpleParser as Parse exposing ( Parser, Result )
 
 
 type Token

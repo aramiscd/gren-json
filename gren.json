@@ -3,7 +3,7 @@
 , "name" : "aramiscd/gren-json"
 , "summary" : "JSON parser, JSON pretty-printer, JSON data type"
 , "license" : "BSD-3-Clause"
-, "version" : "2.0.0"
+, "version" : "3.0.0"
 , "exposed-modules" :
     [ "Json"
     , "Json.Parse"
@@ -11,7 +11,7 @@
     ]
 , "gren-version" : "0.6.0 <= v < 0.7.0"
 , "dependencies" :
-    { "aramiscd/gren-parse" : "2.0.3 <= v < 3.0.0"
+    { "aramiscd/gren-parse" : "3.0.0 <= v < 4.0.0"
     , "gren-lang/core" : "7.0.0 <= v < 8.0.0"
     }
 }

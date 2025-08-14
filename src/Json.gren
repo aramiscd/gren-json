@@ -1,4 +1,8 @@
-module Json exposing ( Json (..) )
+module Json exposing
+    ( Json (..)
+    , encode
+    , decode
+    )
 
 {-| JSON data type
 
@@ -6,7 +10,21 @@ module Json exposing ( Json (..) )
 
 @docs Json
 
+---
+
+@docs encode
+
+---
+
+@docs decode
+
 -}
+
+import Basics
+import Dict exposing ( Dict )
+import Json.Decode as Decode exposing ( Decoder, decodeValue )
+import Json.Encode as Encode
+
 
 {-| Data type for JSON values
 -}
@@ -18,3 +36,115 @@ type Json
     | String String
     | Array ( Array Json )
     | Object ( Array { key : Json, value : Json } )
+
+
+{-| Convert `Json` to `Json.Encode.Value`
+
+Fails if any object key is not a `String String` or if any `Number String` cannot be turned into `Float`.
+-}
+encode : Json -> Maybe Encode.Value
+encode json =
+    when json is
+        Null -> Just Encode.null
+        False -> Just ( Encode.bool Basics.False )
+        True -> Just ( Encode.bool Basics.True )
+        Number number -> String.toFloat number |> Maybe.andThen ( Just << Encode.float )
+        String string -> Just ( Encode.string string )
+        Array array -> tryEncodeArray array
+        Object object -> tryEncodeObject object
+
+
+{-| Convert `Json.Encode.Value` to `Json`
+-}
+decode : Decode.Value -> Result Decode.Error Json
+decode value =
+    decodeValue jsonDecoder value
+
+
+
+-- Internals
+
+
+jsonDecoder : Decoder Json
+jsonDecoder =
+    Decode.lazy
+        ( \ _ ->
+            Decode.oneOf
+                [ Decode.null Null
+                , Decode.map toJsonBool Decode.bool
+                , Decode.map toJsonNumber Decode.float
+                , Decode.map String Decode.string
+                , Decode.map Array ( Decode.array jsonDecoder )
+                , Decode.map toJsonObject ( Decode.dict jsonDecoder )
+                ]
+        )
+
+
+toJsonBool : Bool -> Json
+toJsonBool b =
+    if b then True else False
+
+
+toJsonNumber : Float -> Json
+toJsonNumber x =
+    Number ( String.fromFloat x )
+
+
+toJsonObject : Dict String Json -> Json
+toJsonObject dict =
+    zip ( Array.map String ( Dict.keys dict ) ) ( Dict.values dict )
+    |> Object
+
+
+zip : Array k -> Array v -> Array { key : k, value : v }
+zip keys values =
+    when { key = Array.popFirst keys, value = Array.popFirst values } is
+        { key = Just k, value = Just v } ->
+            Array.pushFirst { key = k.first, value = v.first } ( zip k.rest v.rest )
+        _ -> []
+
+
+tryEncodeArray : Array Json -> Maybe Encode.Value
+tryEncodeArray array =
+    let
+        collect : Json -> Array Encode.Value -> Maybe ( Array Encode.Value )
+        collect item encodedItems =
+            when encode item is
+                Nothing -> Nothing
+                Just encodedItem -> Just ( Array.pushLast encodedItem encodedItems )
+    in
+        array
+        |> Array.foldl
+            ( \ item acc ->
+                when acc is
+                    Nothing -> Nothing
+                    Just encodedItems -> collect item encodedItems
+            )
+            ( Just [] )
+        |> Maybe.map ( Encode.array identity )
+
+
+tryEncodeObject : Array { key : Json, value : Json } -> Maybe Encode.Value
+tryEncodeObject object =
+    let
+        collect :
+            { key : Json, value : Json } ->
+            Array { key : String, value : Encode.Value } ->
+            Maybe ( Array { key : String, value : Encode.Value } )
+        collect item acc =
+            when item.key is
+                String key ->
+                    when encode item.value is
+                        Nothing -> Nothing
+                        Just value -> Just ( Array.pushLast { key = key, value = value } acc )
+                _ -> Nothing
+    in
+        object
+        |> Array.foldl
+            ( \ item acc ->
+                when acc is
+                    Nothing -> Nothing
+                    Just encodedItems -> collect item encodedItems
+            )
+            ( Just [] )
+        |> Maybe.map Encode.object

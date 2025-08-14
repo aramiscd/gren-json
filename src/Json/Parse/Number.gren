@@ -1,6 +1,6 @@
 module Json.Parse.Number exposing ( jsonNumber )
 
-import StringParser as Parse exposing ( Parser, Result )
+import SimpleParser as Parse exposing ( Parser, Result )
 
 
 {-| Parse eine Ganze Zahl

@@ -1,6 +1,6 @@
 module Json.Parse.String exposing ( jsonString )
 
-import StringParser as Parse exposing ( Parser )
+import SimpleParser as Parse exposing ( Parser )
 
 
 {-| Parse einen String und verwirf das Ergebnis
