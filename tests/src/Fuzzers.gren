@@ -9,17 +9,18 @@ import Fuzz exposing ( Fuzzer )
 
 chars : Fuzzer String
 chars =
-    -- todo: das geht gründlicher
-    "abcdefgh" |> String.split "" |> Fuzz.oneOfValues |> zeroOrMore
+    Fuzz.oneOfValues ( String.split "" "abcdefgh" )
+    |> zeroOrMore
 
 
 number : Fuzzer String
 number =
-    Fuzz.sequence
-        [ "123456789" |> String.split "" |> Fuzz.oneOfValues
-        , "0123456789" |> String.split "" |> Fuzz.oneOfValues |> zeroOrMore
-        ]
-    |> Fuzz.map ( String.join "" )
+    let
+        oneToNine = Fuzz.oneOfValues ( String.split "" "123456789" )
+        zeroToNine = Fuzz.oneOfValues ( String.split "" "0123456789" )
+    in
+        Fuzz.sequence [ oneToNine, zeroOrMore zeroToNine ]
+        |> Fuzz.map ( String.join "" )
 
 
 whitespace : Fuzzer String
@@ -32,7 +33,7 @@ whitespace =
 
 zeroOrMore : Fuzzer String -> Fuzzer String
 zeroOrMore fuzzer =
-    Fuzz.array fuzzer |> Fuzz.map ( String.join "" )
+    Fuzz.map ( String.join "" ) ( Fuzz.array fuzzer )
 
 
 
