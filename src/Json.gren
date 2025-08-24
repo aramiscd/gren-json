@@ -55,10 +55,10 @@ decode =
         )
 
 
-{-| Turn `Json` into `Json.Encode.Value`
+{-| Convert `Json` to `Json.Encode.Value` to send it through a port
 
 Fails if any object key is not a `String String` or if any `Number String` cannot be turned into `Float`.
-This is because the `Json` type necessarily leaves some room for the representation of invalid values.
+(The `Json` type leaves some room for the representation of invalid data.)
 -}
 encode : Json -> Maybe Encode.Value
 encode json =
