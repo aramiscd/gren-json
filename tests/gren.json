@@ -4,7 +4,7 @@
     [ "src"
     , "../src"
     ]
-, "gren-version" : "0.6.2"
+, "gren-version" : "0.6.3"
 , "dependencies" :
     { "direct" :
         { "aramiscd/gren-parse" : "3.0.0"

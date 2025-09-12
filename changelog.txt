@@ -1,3 +1,16 @@
+3.0.0 (2025-08-30)
+
+Es gibt jetzt die Funktionen `Json.encode` und `Json.decode` als
+Brücke zwischen meinem JSON-Datentyp und den internen Datentypen
+`Json.Decode.Value` bzw. `Json.Encode.Value`.  Das ist notwendig um
+diesen Datentyp mit Ports zu verwenden.  Gren hat das Konzept und
+die Funktionsweise von Ports (bisher) 1-zu-1 von Elm übernommen.
+selbstdefinierte Datentypen durch Ports zu schicken, wird von Gren nicht
+unterstützt.  Der Empfang selbstdefinierter Datentypen ist möglich
+wenn man einen entsprechenden Decoder angibt.  In beiden Richtungen kommt
+man ans Ziel wenn man über die oben genannten internen Datentypen geht.
+
+
 2.0.0 (2025-08-13)
 
 Bisher ist der JSON-Parser schon an kleinen Eingaben gescheitert,
