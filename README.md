@@ -1,8 +1,5 @@
 # gren-json
 
-[![Tests](https://github.com/aramiscd/gren-json/actions/workflows/run-tests.yml/badge.svg)](https://github.com/aramiscd/gren-json/actions/workflows/run-tests.yml)
-
-
 Note that Gren's standard library is already equipped with modules for
 [encoding](https://packages.gren-lang.org/package/gren-lang/core/version/latest/module/Json.Encode) and
 [decoding](https://packages.gren-lang.org/package/gren-lang/core/version/latest/module/Json.Decode) JSON documents.
